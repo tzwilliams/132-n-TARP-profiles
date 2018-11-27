@@ -27,6 +27,8 @@
 # Package dependancies: 
 #
 # Changelog:
+#   2018.10.23.   Init code
+#   2018.11.27.   
 #                   
 # Feature wishlist:  (*: planned but not complete)
 #     
@@ -44,39 +46,50 @@
 
 ######### Setup ##########
 #load required packages
-require("tidyverse")
-require("readxl")
+require(tidyverse)
+require(readxl)
 
 
 ## Read data ####
-# import the LO mapping data
-LO_mapping <- readxl::read_xlsx(#path = file.choose(), 
-                                path = "C:\\Users\\TaylorWilliams\\OneDrive\\Documents\\_Purdue (OD)\\__Milestones\\2_Prelim (OD)\\132 data + info\\ENGR132_Sp18_assessment_plan (update1).xlsx",
-                                sheet = "CGtoLOtoActivityMapping", 
-                                col_names = T)
+# _import the LO mapping data ####
+LO_mapping <- read_xlsx(#path = file.choose(), 
+                        path = "C:\\Users\\Taylor Williams\\OneDrive\\Documents\\_Purdue (OD)\\__Milestones\\2_Prelim (OD)\\132 data + info\\ENGR132_Sp18_assessment_plan (update1).xlsx",
+                        sheet = "CGtoLOtoActivityMapping", 
+                        col_names = T)
 LO_mapping <- as_tibble(LO_mapping)
 
 #extract and add the numeric versions of the LO, LO_map, and CO
-LO_mapping <- tibble::add_column(.data = LO_mapping, 
-                                 "LO_ID" = NA,
-                                 "LO_map_ID" = NA,
-                                 "CO_ID" = NA)
+LO_mapping <- add_column(.data = LO_mapping, 
+                         "LO_ID" = NA,
+                         "LO_map_ID" = NA,
+                         "CO_ID" = NA)
 for (i in 1:nrow(LO_mapping)) {
-  LO_mapping$LO_ID[i] = str_extract(string = LO_mapping$`LO# Learning Objective`[i],
-                                    pattern = "^/d{2}/./d{2}")
+  LO_mapping$LO_ID[i]     <- str_extract(string = LO_mapping$`LO# Learning Objective`[i],
+                                    pattern = "\\d{2}\\.\\d{2}")
+  LO_mapping$LO_map_ID[i] <- str_extract(string = LO_mapping$LO_Map[i],
+                                    pattern = "\\d{2}\\.\\d{2}")
+  LO_mapping$CO_ID[i]     <- str_extract(string = LO_mapping$`CO# Course Goal`[i],
+                                    pattern = "CO\\d{2}")
 }
 
 
 
-# import BB LO data file
-data_raw <- read_csv(file.choose())
+# _import BlackBoard LO data ####
+data_raw_assessment <- read_csv(file.choose())
 
 # extract the numeric LO IDs
-LO_ID <- str_match(string = data_raw$`Rubric Row`, pattern = "\\d{2}\\.\\d{2}")[,1]
-# LO_ID <- format(sort(round(as.numeric(LO_ID), digits=2)), nsmall = 2)
-# build working dataframe
-df <- data.frame(data_raw, LO_ID, stringsAsFactors=FALSE)
-# df <- cbind(data_raw, LO_ID)
+LO_ID <- str_match(string = data_raw_assessment$`Rubric Row`, pattern = "\\d{2}\\.\\d{2}")[,1]
+
+# build working dataframe and add LO_ID column
+df <- as_tibble(data_raw_assessment)
+df <- df %>% add_column("LO_ID" = LO_ID)
+
+
+## comparing defined vs used LOs #### 
+LOs_in_map <- as.tibble(sort(unique(LO_mapping$LO_ID)))
+LOs_in_assessment <- as.tibble(sort(unique(df$LO_ID)))
+
+LOs_unused <- anti_join(LOs_in_map, LOs_in_assessment)
 
 
 
@@ -87,49 +100,51 @@ LO_subset <- unique(df_subset$LO_ID)
 
 
 # get list of student IDs
-student_ids <- unique(df$User.ID)
+student_ids <- unique(df$"User ID")
 
 
 # build LO level feature vector
-proficiency_levels <- data.frame(value = c(4,3,2,1,0),
-                                 label = c("4_Proficient", "3_Developing", 
-                                            "2_Emerging", "1_Insufficient Evidence", 
-                                            "0_No Attempt"), 
-                                 rubric_column =  c("Proficient", "Developing", 
-                                                    "Emerging", "Insufficient Evidence", 
-                                                    "No Attempt"), 
-                                 rubric_column_alt =  c("Proficient", "Developing", 
-                                                    "Emerging", "Insufficient Evidence", 
-                                                    "Did Not Attempt"))
-stu_LO_FV <- data.frame(student_id = student_ids)
+proficiency_levels <- tbble(value = c(4,3,2,1,0),
+                            label = c("4_Proficient", "3_Developing", 
+                                      "2_Emerging", "1_Insufficient Evidence", 
+                                      "0_No Attempt"), 
+                            rubric_column =  c("Proficient", "Developing", 
+                                               "Emerging", "Insufficient Evidence", 
+                                               "No Attempt"), 
+                            rubric_column_alt =  c("Proficient", "Developing", 
+                                                   "Emerging", "Insufficient Evidence", 
+                                                   "Did Not Attempt"))
+stu_LO_FV <- tibble(student_id = student_ids)
 FV_names <- character()
 for (LO in LO_subset) {
   FV_names <- c(FV_names, paste0(LO, " - ", proficiency_levels$label))
 }
 
+###### CHECKED TO HERE #######
+# Tue Nov 27 18:48:04 2018 ------------------------------
+##############################
+
+# for each student subset the LOs and calculate average LO proficiency (TW Note: for now I'm ignoring the point value and only looking at the proficiency)
+for (cur_stu in student_ids) {
+  cur_stu_LOs <- df_subset[df_subset$User.ID == cur_stu, ]
+
+  for (LO in LO_subset){
+    cur_assessment <- cur_stu_LOs[cur_stu_LOs$LO_ID == LO, "Rubric.Column"]
+    LO_value_sum <- 0
+    for (i in 1:length(cur_assessment)){
+      level <- cur_assessment[i]
+      # LO_value_sum <- LO_value_sum +
+        # proficiency_levels[proficiency_levels$rubric_column == level, "value"]
+      # proficiency_levels[proficiency_levels$rubric_column == level, "value"]
+
+      # stu_LO_FV[cur_stu, FV_names == paste0(LO, " - ", level)]
+    }
+    LO_avg <- LO_value_sum/i
 
 
-# # for each student subset the LOs and calculate average LO proficiency (TW Note: for now I'm ignoring the point value and only looking at the proficiency)
-# for (cur_stu in student_ids) {
-#   cur_stu_LOs <- df_subset[df_subset$User.ID == cur_stu, ]
-#   
-#   for (LO in LO_subset){
-#     cur_assessment <- cur_stu_LOs[cur_stu_LOs$LO_ID == LO, "Rubric.Column"]
-#     LO_value_sum <- 0
-#     for (i in 1:length(cur_assessment)){
-#       level <- cur_assessment[i]
-#       # LO_value_sum <- LO_value_sum + 
-#         # proficiency_levels[proficiency_levels$rubric_column == level, "value"]
-#       # proficiency_levels[proficiency_levels$rubric_column == level, "value"]
-#       
-#       # stu_LO_FV[cur_stu, FV_names == paste0(LO, " - ", level)]
-#     }
-#     LO_avg <- LO_value_sum/i
-#     
-#     
-#   }
-#   
-# }
+  }
+
+}
 
 
 
