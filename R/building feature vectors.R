@@ -187,3 +187,9 @@ for (cur_stu in student_ids) {
 } # end stu FOR
 
 
+
+
+
+
+######### Save data to file #########
+write.csv(x = stu_LO_FV, file.choose())
