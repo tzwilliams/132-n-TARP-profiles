@@ -59,7 +59,7 @@
 #   break
 # }
 
-  #Read in HMM parameter values for users 
+  #Read in parameter values for users 
   probMatrix <- read_csv(file.choose())
 
 
@@ -72,29 +72,28 @@
   #     load(file = paste0(path_output, "randomSeed_", course, ".RData"))
   #     .Random.seed  <- oldSeed
   oldSeed <- .Random.seed
-  save(list = "oldSeed", file = paste0(path_output, "randomSeed_", course, ".RData"))
+  save(list = "oldSeed", file = file.path("output", "randomSeed.RData"))
 
   
-  #find the number of dimensions present in the probability matrix 
-  #   (by counting the number of columns whose names contain "P(*)")
-  # numDims <-  length(select(.data = probMatrix[1,], matches(match = "P\\(.*\\)")))
-  numDims <- ncol(probMatrix)
-  #generate numRandVectors vectors with numDims dimensions (values range from 0:1 uniformly, from runif() function)
-  randomVectors <- replicate(numRandVectors, runif(numDims), simplify=FALSE)
+  #find the number of dimensions present in the probability matrix (one fewer than the total number of columns)
+  # --to del--  (by counting the number of columns whose names contain "P(*)")
+  # --to del--  numDims <-  length(select(.data = probMatrix[1,], matches(match = "P\\(.*\\)")))
+  numDims <- ncol(probMatrix) - 1
+  #generate numRandVectors vectors with numDims dimensions (values range from -1:1 uniformly, from runif() function)
+  randomVectors <- replicate(numRandVectors, runif(numDims, min = -1, max = 1), simplify=FALSE)
   #convert to a data frame
   randomVectors <- as.data.frame(randomVectors)
   #set column names
-  colnames(randomVectors) <- paste0("RV_",1:length(randomVectors))
+  colnames(randomVectors) <- paste0("RV_", 1:length(randomVectors))
   
 ##| Save data to file ####
-  # cat("\nSaving files.")
-  #Save the random vectors
-  #write a CSV file
-  # write.csv(file = file.path("output", "28_randomVectors.csv"), 
-  #           x = randomVectors)  
-  #write to a RData file
-  # save(list = c("randomVectors","numDims"), file = file.path("output", "28_passForwardData_RV.RData"),
-  #      precheck = TRUE, compress = TRUE)
-  write.csv(randomVectors, paste0(path_output, "randomVectors_", course, ".csv"))
+  cat("\nSaving files.")
+  # Save the random vectors
+  # write a CSV file
+  write.csv(file = file.path("output", "randomVectors.csv"),
+            x = randomVectors)
+  # write to a RData file
+  save(list = c("randomVectors","numDims"), file = file.path("output", "passForwardData_RV.RData"),
+       precheck = TRUE, compress = TRUE)
   beep()
-  cat("Done producing random directions for RP1D...\n\n\n")
+  cat("Done producing random directions for n-TARP \n\n\n")
