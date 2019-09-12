@@ -1,16 +1,12 @@
 ## ===================================================== ##
-# Title:        Master script for modeling and profiling user trajectories ####
-# Project:      The Boeing project. Data is from four Boeing courses - B1 through
-#               B4. The aim is model usage trajectories using hidden Markov
-#               models and use the RP1D method to project the HMM parameter
-#               space onto a set of optimal directions in the hope of finding
-#               typical usage 'profiles'.
+# Title:        Master script for ... ####
+# Project:      Dissertation
 #               
-# Authors:      Doipayan Roy
+# Authors:      Taylor Williams
 #
 # Affiliation:  Purdue University
 # 
-# Description:  Master script for trajectory profiling pipeline
+# Description:  Master script for 
 ## ===================================================== ##
 
 
@@ -34,8 +30,6 @@ path_output <- paste0(path_output, "/")
 ##Load required libraries
 require("readr")
 require("dplyr")
-require("jsonlite")
-require("HMM")
 require("plotly")
 require("beepr")
 
