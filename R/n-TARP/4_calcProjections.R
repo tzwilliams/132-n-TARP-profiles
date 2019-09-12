@@ -9,8 +9,7 @@
 #               directions in the hope of finding typical usage 'profiles'.
 # 
 #
-# Authors:      Taylor Williams (principal author), Doipayan Roy (made modifications
-#               required for using script on the Boeing data)
+# Authors:      Taylor Williams 
 #
 # Affiliation:  Purdue University
 # 
@@ -28,69 +27,65 @@ rm(list = setdiff(ls(), c("course", "path_files", "path_output", "probMatrix",
 #  course <- readline(prompt = "Enter the course number (in format B1 / B2 and so on) : \n")
 #  course <- as.character(course)
 # 
-# ## Required libraries ##########
-# #packages
-#  require("readr")
-#  require("tcltk")
-#  require("tidyr")
-#  require("dplyr")
-# 
-# #custom functions
-#  source(file.path("functions_RP1D", "CalcProjectionMatrix.R"))
-#  source(file.path("functions_RP1D", "ExtractRVnumsAndNames.R"))
-#  source(file.path("functions_RP1D", "DisplayPercentComplete.R"))
+## Required libraries ##########
+#packages
+ require("readr")
+ require("tcltk")
+ require("tidyr")
+ require("dplyr")
 
-#Read in the random projection vectors
-randomVectors <- read.csv(paste0(path_output, "randomVectors_", course, ".csv"), row.names = 1)
-#Read in the user vectors
-# probMatrix <-  read.csv(paste0(path_output, "hmmParameters_", course, ".csv"), row.names = 1)
+#custom functions
+ source(file.path("functions_RP1D", "CalcProjectionMatrix.R"))
+ source(file.path("functions_RP1D", "ExtractRVnumsAndNames.R"))
+ source(file.path("functions_RP1D", "DisplayPercentComplete.R"))
+
 
 #Read data from files ####
 #read the CLEAN probability matrix CSV file
-# prompt <- "*****Select the CLEAN PROBABILITY MATRIX CSV file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
-# cat("\n", prompt)
-# filename <- tcltk::tk_choose.files(caption = prompt, 
-#                                    default = file.path(getwd(), 
-#                                                        "output", 
-#                                                        "10_passForwardData_CPM.RData"),
-#                                    filter = matrix(c("RData", ".RData",
-#                                                      "CSV", ".csv",
-#                                                      "All files", ".*"),
-#                                                    3, 2, byrow = TRUE),
-#                                    multi = FALSE)
-# #load in the data based on the type of data file provided
-# if(grepl(x = filename, pattern = "\\.RData$"))
-# {
-#   load(file = filename)
-# }else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
-# {
-#   probMatrix <- read_csv(file = filename)
-# }else
-# {
-#   message("Invalid Data Filetype.")
-#   break
-# }
-# 
-# #read the RANDOM VECTORS data file (from 28_passForwardData.RData)
-# prompt <- "*****Select the RANDOM VECTORS data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
-# cat("\n", prompt, "\n\n")
-# filename <- tcltk::tk_choose.files(caption = prompt, 
-#                                    default = file.path(getwd(), 
-#                                                        "output", 
-#                                                        "28_passForwardData_RV.RData"),
-#                                    filter = matrix(c("RData", ".RData",
-#                                                      "All files", ".*"),
-#                                                    2, 2, byrow = TRUE),
-#                                    multi = FALSE)
-# #load in the data based on the type of data file provided
-# if(grepl(x = filename, pattern = "\\.RData$"))
-# {
-#   load(file = filename)
-# }else
-# {
-#   message("Invalid Data Filetype.")
-#   break
-# }
+prompt <- "*****Select the CLEAN PROBABILITY MATRIX CSV file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
+cat("\n", prompt)
+filename <- tcltk::tk_choose.files(caption = prompt,
+                                   default = file.path(getwd(),
+                                                       "output",
+                                                       "10_passForwardData_CPM.RData"),
+                                   filter = matrix(c("RData", ".RData",
+                                                     "CSV", ".csv",
+                                                     "All files", ".*"),
+                                                   3, 2, byrow = TRUE),
+                                   multi = FALSE)
+#load in the data based on the type of data file provided
+if(grepl(x = filename, pattern = "\\.RData$"))
+{
+  load(file = filename)
+}else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
+{
+  probMatrix <- read_csv(file = filename)
+}else
+{
+  message("Invalid Data Filetype.")
+  break
+}
+
+#read the RANDOM VECTORS data file (from 28_passForwardData.RData)
+prompt <- "*****Select the RANDOM VECTORS data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
+cat("\n", prompt, "\n\n")
+filename <- tcltk::tk_choose.files(caption = prompt,
+                                   default = file.path(getwd(),
+                                                       "output",
+                                                       "28_passForwardData_RV.RData"),
+                                   filter = matrix(c("RData", ".RData",
+                                                     "All files", ".*"),
+                                                   2, 2, byrow = TRUE),
+                                   multi = FALSE)
+#load in the data based on the type of data file provided
+if(grepl(x = filename, pattern = "\\.RData$"))
+{
+  load(file = filename)
+}else
+{
+  message("Invalid Data Filetype.")
+  break
+}
 
 
 
