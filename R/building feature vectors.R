@@ -50,11 +50,14 @@
 require(tidyverse)
 require(readxl)
 
+#Load funtions 
+source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
+
 
 ######### Read Data ##########
 # _import the LO mapping data ####
 LO_mapping <- read_xlsx(#path = file.choose(), 
-                        path = "C:\\Users\\Taylor Williams\\OneDrive\\Documents\\_Purdue (OD)\\__Milestones\\2_Prelim (OD)\\132 data + info\\ENGR132_Sp18_assessment_plan (update1).xlsx",
+                        path = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\2_Prelim (TW DB)\\132 data + info\\ENGR132_Sp18_assessment_plan (update1.01).xlsx",
                         sheet = "CGtoLOtoActivityMapping", 
                         col_names = T)
 LO_mapping <- as_tibble(LO_mapping)
@@ -75,9 +78,9 @@ for (i in 1:nrow(LO_mapping)) {
 
 
 
-# _import BlackBoard LO data ####
+# _import BlackBoard LO data in CSV format ####
 data_raw_assessment <- read_csv(#file = file.choose(),
-                                file = "C:\\Users\\Taylor Williams\\OneDrive\\Documents\\_Purdue (OD)\\__Milestones\\2_Prelim (OD)\\132 data + info\\132 deID data (sp18)\\_132 deID data. complete. clean.csv")
+                                file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\2_Prelim (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
 
 
 
@@ -98,19 +101,24 @@ LOs_unused <- anti_join(LOs_in_map, LOs_in_assessment)
 
 
 
-# get list of student IDs
-student_ids_all <- unique(df_subset$"User ID")
+# get list of all student IDs in the dataset
+student_ids_all <- unique(df$"User ID")
 
 
 
 ########## SUBSETS for initial development and testing #########
-# filter on the 01.xx LOs
-LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
-df_subset <- df[LO_ID_range, ]
+# # filter on the 01.xx LOs
+# LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
+# df_subset <- df[LO_ID_range, ]
+# LO_subset <- sort(unique(df_subset$LO_ID))
+
+# filter on ALL LOs
+# LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
+df_subset <- df
 LO_subset <- sort(unique(df_subset$LO_ID))
 
-# only include first 100 students
-student_ids <- student_ids_all[1:100]
+# only include first n students
+student_ids <- student_ids_all#[1:100]
 
 
 
@@ -122,16 +130,16 @@ student_ids <- student_ids_all[1:100]
 #   
 ## build LO level feature vectors (FV)
 # construct column names for feature vectors
-proficiency_levels <- tibble(value = c(4,3,2,1,0),
+proficiency_levels <- tibble(value = c(4,3,2,1,0,0),
                              label = c("4_Proficient", "3_Developing", 
                                        "2_Emerging", "1_Insufficient Evidence", 
-                                       "0_No Attempt"), 
+                                       "0_No Attempt", "0_Did Not Attempt"), 
                              rubric_column =  c("Proficient", "Developing", 
                                                 "Emerging", "Insufficient Evidence", 
-                                                "No Attempt"), 
-                             rubric_column_alt =  c("Proficient", "Developing", 
-                                                    "Emerging", "Insufficient Evidence", 
-                                                    "Did Not Attempt"))
+                                                "No Attempt", "Did Not Attempt"), 
+                             rubric_column_alt =  c("", "", 
+                                                    "", "", 
+                                                    "", ""))
 
 # make list of FV name
 FV_names <- character()
@@ -146,7 +154,6 @@ stu_LO_FV <- tibble(student_id = student_ids)
 # append feature vector names to the main table (init. values to 0)
 for (i in 1:length(FV_names)) {
   stu_LO_FV <- stu_LO_FV %>% add_column(!!FV_names[i] := 0)
-  
 }
 stu_LO_FV <- column_to_rownames(stu_LO_FV, var = "student_id")
   
@@ -171,11 +178,12 @@ for (cur_stu in student_ids) {
         # LO_value_sum <- LO_value_sum +
         #   proficiency_levels[proficiency_levels$rubric_column == level, "value"]
         
+        # convert proficency level into the column name format for this specific LO
         cur_colName <- paste0(LO, " - ",
                               proficiency_levels$label[proficiency_levels$rubric_column == level])
         
         # increment the count for this LO's profiency level
-        stu_LO_FV[cur_stu, cur_colName] <- stu_LO_FV[cur_stu, cur_colName] +1
+        stu_LO_FV[cur_stu, cur_colName] <- stu_LO_FV[cur_stu, cur_colName] + 1
       }
     
       
@@ -184,6 +192,25 @@ for (cur_stu in student_ids) {
         stu_LO_FV[cur_stu, str_detect(string = FV_names, pattern = paste0("^", LO))]/i
     } # end IF
   } # end LO FOR
+  
+  #| print completion progress to console   ####
+    #durring first iteration, create progress status variables for main processing loop
+    if(cur_stu==student_ids[1])
+    {
+      iCount <- 0 #loop counter for completion updates
+      pct <- 0  #percentage complete tracker
+    }
+  
+    #print function
+    updateVars <- DisplayPercentComplete(dataFrame = student_ids, iCount, pct, displayText = "Student: ")
+  
+    #update status variables (for next iteration)
+    iCount <- updateVars$iCount
+    pct <- updateVars$pct
+  
+    #print update
+    cat(updateVars$toPrint)
+  
 } # end stu FOR
 
 
