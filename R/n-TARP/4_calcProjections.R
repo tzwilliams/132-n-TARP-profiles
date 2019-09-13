@@ -24,8 +24,7 @@ rm(list = setdiff(ls(), c("course", "path_files", "path_output", "probMatrix",
 # path_output = "C:/Users/TaylorWilliams/Dropbox (Contextualized Eval)/Contextualized Eval Team Folder/GRADS/Taylor/_Boeing/Learning Pathway Profiles/outputs/B4/"
 # # setwd(path)
 # 
-#  course <- readline(prompt = "Enter the course number (in format B1 / B2 and so on) : \n")
-#  course <- as.character(course)
+#  course <- as.character("132")
 # 
 ## Required libraries ##########
 #packages
