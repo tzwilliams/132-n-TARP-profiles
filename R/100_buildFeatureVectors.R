@@ -34,6 +34,9 @@
 #                   
 # Feature wishlist:  (*: planned but not complete)
 #     * label the first column of the feature vector as "userID" (it's currently blank)
+#     * allow users to select what level of LO grouping they want (LO, LO_map, CO)
+#     * code the LO grouping function
+#     * update the Feature Vector calculation in light of the selected grouping level
 ## ===================================================== ##
 
 
@@ -124,6 +127,21 @@ for (i in 1:nrow(df)) {
 }
 
 
+
+
+##Save assessment data to file ####
+message("\nSaving assessment files.\n")
+
+#write to CSV file
+write_csv(path = file.path("output", paste0("100_assessmentData.csv")), 
+          x = df) 
+#write to RData file
+save(df, file = file.path("output", paste0("100_assessmentData.RData")),
+     precheck = TRUE, compress = TRUE)
+
+
+
+
 ## comparing defined vs used LOs #### 
 LOs_in_map <- as.tibble(sort(unique(LO_mapping$LO_ID)))
 LOs_in_assessment <- as.tibble(sort(unique(df$LO_ID)))
@@ -152,9 +170,18 @@ LO_subset <- sort(unique(df_subset$LO_ID))
 student_ids <- student_ids_all#[1:100]
 
 
+
+
 ########## COMBINE LOs into higher level groupings #########
-# 
+# user selection of grouping level
+ 
+
 # LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
+
+
+
+
+
 
 
 
