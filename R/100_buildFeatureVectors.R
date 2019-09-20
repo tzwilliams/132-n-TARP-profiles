@@ -3,7 +3,7 @@
 # Project:      132 n-TARP Profiles
 #               https://github.com/tzwilliams/
 # 
-# Copyright 2018 Taylor Williams
+# Copyright 2018-19 Taylor Williams
 # 
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
@@ -30,15 +30,16 @@
 #   2018.10.23.   Init code
 #   2018.11.27.   continued init development
 #   2018.11.30.   First complete working version
+#   2019.09.20.   Updates to combine LOs into higher level groupings
 #                   
 # Feature wishlist:  (*: planned but not complete)
-#     
+#     * label the first column of the feature vector as "userID" (it's currently blank)
 ## ===================================================== ##
 
 
 
 ######### Clean the environment ########## 
-# rm(list=ls())   
+rm(list=ls())
 
 
 ######### Internal functions ########## 
@@ -92,6 +93,36 @@ LO_ID <- str_match(string = data_raw_assessment$`Rubric Row`, pattern = "\\d{2}\
 df <- as_tibble(data_raw_assessment)
 df <- df %>% add_column("LO_ID" = LO_ID)
 
+# lookup LO_map_ID and CO_ID from th LO_mapping data
+df <- add_column(.data = df, 
+                 "LO_map_ID" = NA,
+                 "CO_ID" = NA)
+for (i in 1:nrow(df)) {
+  # df$LO_ID[i]     <- str_extract(string = LO_mapping$`LO# Learning Objective`[i],
+  #                                        pattern = "\\d{2}\\.\\d{2}")
+  df$LO_map_ID[i] <- LO_mapping$LO_map_ID[LO_mapping$LO_ID == df$LO_ID[i]][1]
+  df$CO_ID[i]     <- LO_mapping$CO_ID[LO_mapping$LO_ID == df$LO_ID[i]][1]
+  
+  #| print completion progress to console   ####
+  #durring first iteration, create progress status variables for main processing loop
+  if(i==1)
+  {
+    iCount <- 0 #loop counter for completion updates
+    pct <- 0  #percentage complete tracker
+  }
+  
+  #print function
+  updateVars <- DisplayPercentComplete(dataFrame = df, iCount, pct, displayText = "LO grouping: ")
+  
+  #update status variables (for next iteration)
+  iCount <- updateVars$iCount
+  pct <- updateVars$pct
+  
+  #print update
+  cat(updateVars$toPrint)
+  
+}
+
 
 ## comparing defined vs used LOs #### 
 LOs_in_map <- as.tibble(sort(unique(LO_mapping$LO_ID)))
@@ -119,6 +150,11 @@ LO_subset <- sort(unique(df_subset$LO_ID))
 
 # only include first n students
 student_ids <- student_ids_all#[1:100]
+
+
+########## COMBINE LOs into higher level groupings #########
+# 
+# LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
 
 
 

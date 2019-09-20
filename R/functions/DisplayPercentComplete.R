@@ -1,7 +1,6 @@
 ## ===================================================== ##
 # Title:        Function: display percent complete to console ####
-# Project:      edX data pipeline for course user clustering analytics
-#               https://tzwilliams.github.io/edX-clustering/
+# Project:      none (general function)
 #
 # Copyright 2018 Taylor Williams
 #
@@ -23,7 +22,7 @@
 # Affiliation:  Purdue University
 #
 # Description: Look at the dataframe being processed and display percent 
-#               complete message for user. To be called from within a lengthy 
+#               complete message for user. To be called from within a nrowy 
 #               processing loop.  The code to copy into the loop is included as
 #               a comment at the beginning of the function below.
 #
@@ -67,29 +66,36 @@ DisplayPercentComplete <- function(dataFrame, iCount, pct, displayText = ""){
   
   
   #| print completion progress to console   ####
-  if(length(dataFrame) > 1)
+  if(nrow(dataFrame) > 1)
   {
 
       iCount <- iCount + 1  
-      if(length(dataFrame) < 10 &
-         iCount%%as.integer((length(dataFrame))/1) == 0 & 
+      if(nrow(dataFrame) < 10 &
+         iCount%%as.integer((nrow(dataFrame))/1) == 0 & 
          pct <= 100)
       {
         pct <- pct + 1
         ifelse(pct>100, yes = (pct <- 100), no = "")  #cap pct to 100
         toPrint <- paste0("\r", displayText, pct, "% complete")
-      }else if(length(dataFrame) < 100 & 
-         iCount%%as.integer((length(dataFrame))/10) == 0 & 
+      }else if(nrow(dataFrame) < 100 & 
+         iCount%%as.integer((nrow(dataFrame))/10) == 0 & 
          pct <= 100)
       {
         pct <- pct + 10
         ifelse(pct>100, yes = (pct <- 100), no = "")  #cap pct to 100
         toPrint <- paste0("\r", displayText, pct, "% complete")
-      }else if(length(dataFrame) >= 100 &
-               iCount%%as.integer((length(dataFrame))/100) == 0 & 
+      }else if(nrow(dataFrame) < 10000 &
+               iCount%%as.integer((nrow(dataFrame))/100) == 0 & 
                pct <= 100)
       {
         pct <- pct + 1
+        ifelse(pct>100, yes = (pct <- 100), no = "")  #cap pct to 100
+        toPrint <- paste0("\r", displayText, pct, "% complete")
+      }else if(nrow(dataFrame) >= 10000 &
+               iCount%%as.integer((nrow(dataFrame))/10000) == 0 & 
+               pct <= 100)
+      {
+        pct <- pct + .01
         ifelse(pct>100, yes = (pct <- 100), no = "")  #cap pct to 100
         toPrint <- paste0("\r", displayText, pct, "% complete")
       }else
