@@ -31,12 +31,14 @@
 #   2018.11.27.   continued init development
 #   2018.11.30.   First complete working version
 #   2019.09.20.   Updates to combine LOs into higher level groupings
+#   2019.10.07.   
 #                   
 # Feature wishlist:  (*: planned but not complete)
 #     * label the first column of the feature vector as "userID" (it's currently blank)
 #     * allow users to select what level of LO grouping they want (LO, LO_map, CO)
 #     * code the LO grouping function
 #     * update the Feature Vector calculation in light of the selected grouping level
+#     * Code the user selection of a minimum number of observations at the selected LO grouping level (i.e., at least three observations at the LO_map level)
 ## ===================================================== ##
 
 
@@ -174,7 +176,47 @@ student_ids <- student_ids_all#[1:100]
 
 ########## COMBINE LOs into higher level groupings #########
 # user selection of grouping level
- 
+repeat{
+  userSelection_LO_Grouping <- readline(prompt="\n At what level would you like to group the learning objectives?: 
+Enter '1' for detailed level (LO level, not recommended),  
+      '2' for middle level (LO-map level),
+      '3' for highest level (CO level)");
+  
+
+  
+  #exit loop and continue script if input valid
+  if(userSelection_LO_Grouping == 1){
+    LO_lvl <- 'LO_ID'
+    break
+  } else if(userSelection_LO_Grouping == 2){
+    LO_lvl <- 'LO_map_ID'
+    break
+  } else if(userSelection_LO_Grouping == 3){
+    LO_lvl <- 'CO_ID'
+    break
+  } 
+  
+  beepr::beep(sound = 10)   #notify user to provide input
+}   #repeat if none of the conditions were met (i.e., user input was invalid)
+
+
+
+# user selection of minimum number of observations
+repeat{
+  userSelection_minObs <- readline(prompt="\n What is the minimum number of observations required \n at the selected learning objective group level? : 
+Enter '1' to include all available assessments,  
+      '2'-'9' to only include groups with at least that number of assessments   ");
+  
+  userSelection_minObs <- as.integer(userSelection_minObs)
+  
+  #exit loop and continue script if input valid
+  if(userSelection_minObs >= 1 &
+     userSelection_minObs <= 9){
+    break
+  }
+  beepr::beep(sound = 10)   #notify user to provide input
+}   #repeat if none of the conditions were met (i.e., user input was invalid)
+
 
 # LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
 
