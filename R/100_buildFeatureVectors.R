@@ -166,7 +166,7 @@ student_ids_all <- unique(df$"User ID")
 # filter on ALL LOs
 # LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
 df_subset <- df
-LO_subset <- sort(unique(df_subset$LO_ID))
+
 
 # only include first n students
 student_ids <- student_ids_all#[1:100]
@@ -176,49 +176,51 @@ student_ids <- student_ids_all#[1:100]
 
 ########## COMBINE LOs into higher level groupings #########
 # user selection of grouping level
-repeat{
-  userSelection_LO_Grouping <- readline(prompt="\n At what level would you like to group the learning objectives?: 
-Enter '1' for detailed level (LO level, not recommended),  
-      '2' for middle level (LO-map level),
-      '3' for highest level (CO level)");
-  
-
-  
-  #exit loop and continue script if input valid
-  if(userSelection_LO_Grouping == 1){
-    LO_lvl <- 'LO_ID'
-    break
-  } else if(userSelection_LO_Grouping == 2){
+# repeat{
+#   userSelection_LO_Grouping <- readline(prompt="\n At what level would you like to group the learning objectives?: 
+# Enter '1' for detailed level (LO level, not recommended),  
+#       '2' for middle level (LO-map level),
+#       '3' for highest level (CO level)");
+#   
+# 
+#   
+#   #exit loop and continue script if input valid
+#   if(userSelection_LO_Grouping == 1){
+#     LO_lvl <- 'LO_ID'
+#     LO_subset <- sort(unique(df_subset$LO_ID))
+#     break
+#   } else if(userSelection_LO_Grouping == 2){
     LO_lvl <- 'LO_map_ID'
-    break
-  } else if(userSelection_LO_Grouping == 3){
-    LO_lvl <- 'CO_ID'
-    break
-  } 
-  
-  beepr::beep(sound = 10)   #notify user to provide input
-}   #repeat if none of the conditions were met (i.e., user input was invalid)
+    LO_subset <- sort(unique(df_subset$LO_map_ID))
+#     break
+#   } else if(userSelection_LO_Grouping == 3){
+#     LO_lvl <- 'CO_ID'
+#     LO_subset <- sort(unique(df_subset$CO_ID))
+#     break
+#   } 
+#   
+#   beepr::beep(sound = 10)   #notify user to provide input
+# }   #repeat if none of the conditions were met (i.e., user input was invalid)
 
 
 
 # user selection of minimum number of observations
-repeat{
-  userSelection_minObs <- readline(prompt="\n What is the minimum number of observations required \n at the selected learning objective group level? : 
-Enter '1' to include all available assessments,  
-      '2'-'9' to only include groups with at least that number of assessments   ");
-  
-  userSelection_minObs <- as.integer(userSelection_minObs)
-  
-  #exit loop and continue script if input valid
-  if(userSelection_minObs >= 1 &
-     userSelection_minObs <= 9){
-    break
-  }
-  beepr::beep(sound = 10)   #notify user to provide input
-}   #repeat if none of the conditions were met (i.e., user input was invalid)
-
-
-# LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
+# repeat{
+#   userSelection_minObs <- readline(prompt="\n What is the minimum number of observations required \n at the selected learning objective group level? : 
+# Enter '1' to include all available assessments,  
+#       '2'-'9' to only include groups with at least that number of assessments   ");
+#   
+#   userSelection_minObs <- as.integer(userSelection_minObs)
+#   
+#   #exit loop and continue script if input valid
+#   if(userSelection_minObs >= 1 &
+#      userSelection_minObs <= 9){
+#     break
+#   }
+#   beepr::beep(sound = 10)   #notify user to provide input
+# }   #repeat if none of the conditions were met (i.e., user input was invalid)
+# 
+# 
 
 
 
@@ -272,7 +274,7 @@ for (cur_stu in student_ids) {
   cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
 
   for (LO in LO_subset){
-    cur_assessments <- cur_stu_LOs[cur_stu_LOs$LO_ID == LO, "Rubric Column"]
+    cur_assessments <- cur_stu_LOs[cur_stu_LOs[[LO_lvl]] == LO, "Rubric Column"]
     # LO_value_sum <- 0.0
     
     if(nrow(cur_assessments) > 0){
@@ -307,7 +309,7 @@ for (cur_stu in student_ids) {
     }
   
     #print function
-    updateVars <- DisplayPercentComplete(dataFrame = student_ids, iCount, pct, displayText = "Student: ")
+    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_ids), iCount, pct, displayText = "Student: ")
   
     #update status variables (for next iteration)
     iCount <- updateVars$iCount
@@ -323,5 +325,13 @@ for (cur_stu in student_ids) {
 
 
 
-######### Save data to CSV file #########
-write.csv(x = stu_LO_FV, file.choose())
+######### Save data to file #########
+##Save assessment data to file ####
+message("\nSaving Feature vector files.\n")
+
+#write to CSV file
+write_csv(path = file.path("output", paste0("100b_stuFeatureVector-", LO_lvl ,"_grouping.csv")), 
+          x = stu_LO_FV) 
+#write to RData file
+save(stu_LO_FV, file = file.path("output", paste0("100b_stuFeatureVector-", LO_lvl ,"_grouping.RData")),
+     precheck = TRUE, compress = TRUE)
