@@ -32,13 +32,14 @@
 #   2018.11.30.   First complete working version
 #   2019.09.20.   Updates to combine LOs into higher level groupings
 #   2019.10.07.   
-#                   
-# Feature wishlist:  (*: planned but not complete)
-#     * label the first column of the feature vector as "userID" (it's currently blank)
+#     * Code the user selection of a minimum number of observations at the selected LO grouping level (i.e., at least three observations at the LO_map level)
 #     * allow users to select what level of LO grouping they want (LO, LO_map, CO)
 #     * code the LO grouping function
 #     * update the Feature Vector calculation in light of the selected grouping level
-#     * Code the user selection of a minimum number of observations at the selected LO grouping level (i.e., at least three observations at the LO_map level)
+#                   
+# Feature wishlist:  (*: planned but not complete)
+#     * label the first column of the feature vector as "userID" (it's currently blank)
+#     * add functionality to the user selection of the threshold number of data pointsto include
 ## ===================================================== ##
 
 
@@ -99,7 +100,7 @@ df <- as_tibble(data_raw_assessment)
 df <- df %>% add_column("LO_ID" = LO_ID)
 
 # lookup LO_map_ID and CO_ID from th LO_mapping data
-df <- add_column(.data = df, 
+df <- add_column(.data = df,
                  "LO_map_ID" = NA,
                  "CO_ID" = NA)
 for (i in 1:nrow(df)) {
@@ -107,7 +108,7 @@ for (i in 1:nrow(df)) {
   #                                        pattern = "\\d{2}\\.\\d{2}")
   df$LO_map_ID[i] <- LO_mapping$LO_map_ID[LO_mapping$LO_ID == df$LO_ID[i]][1]
   df$CO_ID[i]     <- LO_mapping$CO_ID[LO_mapping$LO_ID == df$LO_ID[i]][1]
-  
+
   #| print completion progress to console   ####
   #durring first iteration, create progress status variables for main processing loop
   if(i==1)
@@ -115,17 +116,17 @@ for (i in 1:nrow(df)) {
     iCount <- 0 #loop counter for completion updates
     pct <- 0  #percentage complete tracker
   }
-  
+
   #print function
   updateVars <- DisplayPercentComplete(dataFrame = df, iCount, pct, displayText = "LO grouping: ")
-  
+
   #update status variables (for next iteration)
   iCount <- updateVars$iCount
   pct <- updateVars$pct
-  
+
   #print update
   cat(updateVars$toPrint)
-  
+
 }
 
 
@@ -135,8 +136,8 @@ for (i in 1:nrow(df)) {
 message("\nSaving assessment files.\n")
 
 #write to CSV file
-write_csv(path = file.path("output", paste0("100_assessmentData.csv")), 
-          x = df) 
+write_csv(path = file.path("output", paste0("100_assessmentData.csv")),
+          x = df)
 #write to RData file
 save(df, file = file.path("output", paste0("100_assessmentData.RData")),
      precheck = TRUE, compress = TRUE)
@@ -176,51 +177,51 @@ student_ids <- student_ids_all#[1:100]
 
 ########## COMBINE LOs into higher level groupings #########
 # user selection of grouping level
-# repeat{
-#   userSelection_LO_Grouping <- readline(prompt="\n At what level would you like to group the learning objectives?: 
-# Enter '1' for detailed level (LO level, not recommended),  
-#       '2' for middle level (LO-map level),
-#       '3' for highest level (CO level)");
-#   
-# 
-#   
-#   #exit loop and continue script if input valid
-#   if(userSelection_LO_Grouping == 1){
-#     LO_lvl <- 'LO_ID'
-#     LO_subset <- sort(unique(df_subset$LO_ID))
-#     break
-#   } else if(userSelection_LO_Grouping == 2){
-    LO_lvl <- 'LO_map_ID'
-    LO_subset <- sort(unique(df_subset$LO_map_ID))
-#     break
-#   } else if(userSelection_LO_Grouping == 3){
-#     LO_lvl <- 'CO_ID'
-#     LO_subset <- sort(unique(df_subset$CO_ID))
-#     break
-#   } 
-#   
-#   beepr::beep(sound = 10)   #notify user to provide input
-# }   #repeat if none of the conditions were met (i.e., user input was invalid)
+repeat{
+  userSelection_LO_Grouping <- readline(prompt="\n At what level would you like to group the learning objectives?:
+Enter '1' for detailed level (LO level, not recommended),
+      '2' for middle level (LO-map level),
+      '3' for highest level (CO level)");
+
+
+
+  #exit loop and continue script if input valid
+  if(userSelection_LO_Grouping == 1){
+LO_lvl <- 'LO_ID'
+LO_subset <- sort(unique(df_subset$LO_ID))
+    break
+  } else if(userSelection_LO_Grouping == 2){
+LO_lvl <- 'LO_map_ID'
+LO_subset <- sort(unique(df_subset$LO_map_ID))
+    break
+  } else if(userSelection_LO_Grouping == 3){
+LO_lvl <- 'CO_ID'
+LO_subset <- sort(unique(df_subset$CO_ID))
+    break
+  }
+
+  beepr::beep(sound = 10)   #notify user to provide input
+}   #repeat if none of the conditions were met (i.e., user input was invalid)
 
 
 
 # user selection of minimum number of observations
-# repeat{
-#   userSelection_minObs <- readline(prompt="\n What is the minimum number of observations required \n at the selected learning objective group level? : 
-# Enter '1' to include all available assessments,  
-#       '2'-'9' to only include groups with at least that number of assessments   ");
-#   
-#   userSelection_minObs <- as.integer(userSelection_minObs)
-#   
-#   #exit loop and continue script if input valid
-#   if(userSelection_minObs >= 1 &
-#      userSelection_minObs <= 9){
-#     break
-#   }
-#   beepr::beep(sound = 10)   #notify user to provide input
-# }   #repeat if none of the conditions were met (i.e., user input was invalid)
-# 
-# 
+repeat{
+  userSelection_minObs <- readline(prompt="\n What is the minimum number of observations required \n at the selected learning objective group level? :
+Enter '1' to include all available assessments,
+      '2'-'9' to only include groups with at least that number of assessments   ");
+
+  userSelection_minObs <- as.integer(userSelection_minObs)
+
+  #exit loop and continue script if input valid
+  if(userSelection_minObs >= 1 &
+     userSelection_minObs <= 9){
+    break
+  }
+  beepr::beep(sound = 10)   #notify user to provide input
+}   #repeat if none of the conditions were met (i.e., user input was invalid)
+
+
 
 
 
@@ -330,8 +331,9 @@ for (cur_stu in student_ids) {
 message("\nSaving Feature vector files.\n")
 
 #write to CSV file
-write_csv(path = file.path("output", paste0("100b_stuFeatureVector-", LO_lvl ,"_grouping.csv")), 
-          x = stu_LO_FV) 
+write.csv(file = file.path("output", paste0("100b_stuFeatureVector-", LO_lvl ,"_grouping.csv")), 
+          x = stu_LO_FV, row.names = T) 
 #write to RData file
-save(stu_LO_FV, file = file.path("output", paste0("100b_stuFeatureVector-", LO_lvl ,"_grouping.RData")),
+save(stu_LO_FV, LO_lvl, file = file.path("output", paste0("100b_stuFeatureVector-", LO_lvl ,"_grouping.RData")),
      precheck = TRUE, compress = TRUE)
+
