@@ -64,7 +64,7 @@ source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
 ######### Read Data ##########
 # _import the LO mapping data ####
 LO_mapping <- read_xlsx(#path = file.choose(), 
-                        path = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\2_Prelim (TW DB)\\132 data + info\\ENGR132_Sp18_assessment_plan (update1.01).xlsx",
+                        path = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\ENGR132_Sp18_assessment_plan (update1.01).xlsx",
                         sheet = "CGtoLOtoActivityMapping", 
                         col_names = T)
 LO_mapping <- as_tibble(LO_mapping)
@@ -87,8 +87,21 @@ for (i in 1:nrow(LO_mapping)) {
 
 # _import BlackBoard LO data in CSV format ####
 data_raw_assessment <- read_csv(#file = file.choose(),
-                                file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\2_Prelim (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
+                                file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
 
+
+######### export Student IDs to file ##########
+##Save Student IDs to file ####
+message("\nSaving Student IDs.\n")
+
+student_IDs <- as.data.frame( unique(data_raw_assessment$`User ID`) )
+
+# Rename column where names is "user_ID"
+names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
+
+#write to CSV file
+write_csv(path = file.path("output", paste0("100_studentIDs.csv")),
+          x = student_IDs)
 
 
 ######### Clean Data ##########
