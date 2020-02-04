@@ -86,22 +86,33 @@ for (i in 1:nrow(LO_mapping)) {
 
 
 # _import BlackBoard LO data in CSV format ####
-data_raw_assessment <- read_csv(#file = file.choose(),
+data_raw_complete <- read_csv(#file = file.choose(),
                                 file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
+
+
+
+# _import training set of Student IDs ####
+training_ids <- read_csv(#file = file.choose(),
+  file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\050_studentIDs_trainingSet_80pct.csv")
+
+  #filter on the training data points (Assuming the training ids are in a column named 'x')
+data_raw_assessment <- data_raw_complete[data_raw_complete$`User ID` %in% training_ids$x, ] 
 
 
 ######### export Student IDs to file ##########
 ##Save Student IDs to file ####
-message("\nSaving Student IDs.\n")
+# message("\nSaving Student IDs.\n")
+# 
+# student_IDs <- as.data.frame( unique(data_raw_assessment$`User ID`) )
+# 
+# # Rename column where names is "user_ID"
+# names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
+# 
+# #write to CSV file
+# write_csv(path = file.path("output", paste0("100_studentIDs.csv")),
+#           x = student_IDs)
 
-student_IDs <- as.data.frame( unique(data_raw_assessment$`User ID`) )
 
-# Rename column where names is "user_ID"
-names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
-
-#write to CSV file
-write_csv(path = file.path("output", paste0("100_studentIDs.csv")),
-          x = student_IDs)
 
 
 ######### Clean Data ##########
