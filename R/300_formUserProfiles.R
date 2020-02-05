@@ -1,10 +1,7 @@
 ## ===================================================== ##
-# Title:        Form user profiles ####
-# Project:      The Boeing project. Data is from four Boeing courses - B1 through
-#               B4. The aim is model usage trajectories using hidden Markov
-#               models and use the RP1D method to project the HMM parameter
-#               space onto a set of optimal directions in the hope of finding
-#               typical usage 'profiles'.
+# Title:        Form User Profiles ####
+# Project:      132 n-TARP Profiles
+#               https://github.com/tzwilliams/
 #               
 # Authors:      Doipayan Roy (principal author), Taylor Williams (made modifications
 #               to fix a bug and export important data)
@@ -13,50 +10,197 @@
 # 
 # Description:  Calculate projection values of user parameter vectors onto random
 #               projection directions
+# 
+# Package dependancies: 
+#
+# Changelog:
+#     
+#                   
+# Feature wishlist:  (*: planned but not complete)
+#     *
 ## ===================================================== ##
 
-## Clean the environment except required variables########## 
-rm(list = setdiff(ls(), c("course", "path_files", "path_output", "probMatrix",
-                          "CalcProjectionMatrix", "ExtractRVnumsAndNames",
-                          "DisplayPercentComplete")))
+
+
+
+######### Clean the environment ########## 
+rm(list=ls())
+# ## Clean the environment except required variables########## 
+# rm(list = setdiff(ls(), c("course", "path_files", "path_output", "probMatrix",
+#                   
+
+######### Internal functions ########## 
+
+
+
+######### Setup ##########
+#load required packages
+require(tidyverse)
+require(readxl)
+
+#Load funtions 
+source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
+
+
+######### Read Data ##########
+
 
 ##Read file with W values for projection directions
-W_values <-  read.csv(paste0(path_output, "minW_Threshold_", course, ".csv"), row.names = 1)
+#to del# W_values <-  read.csv(paste0(path_output, "minW_Threshold_", course, ".csv"), row.names = 1)
+#read the MIN_W and THRESHOLD data file
+prompt <- "*****Select the MIN_W and THRESHOLD data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
+cat("\n", prompt, "\n\n")
+filename <- tcltk::tk_choose.files(caption = prompt,
+                                   default = file.path(getwd(),
+                                                       "output",
+                                                       "40_minW_and_threshold.RData"),
+                                   filter = matrix(c("RData", ".RData",
+                                                     "CSV", ".csv",
+                                                     "All files", ".*"),
+                                                   3, 2, byrow = TRUE),
+                                   multi = FALSE)
+#load in the data based on the type of data file provided
+if(grepl(x = filename, pattern = "\\.RData$"))
+{
+  load(file = filename)
+
+}else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
+{
+  minW_RandVec_sort <- read_csv(file = filename)
+
+}else
+{
+  message("Invalid Data Filetype.")
+  return
+}
+
+
 
 ##Read file containing projection directions
-projection_directions <- read.csv(paste0(path_output, "randomVectors_",
-                                         course, ".csv"), row.names = 1)
+#to del# projection_directions <- read.csv(paste0(path_output, "randomVectors_",
+                                         # course, ".csv"), row.names = 1)
+#read the BEST RANDOM PROJECTIONS data file
+# prompt <- "*****Select the BEST RANDOM PROJECTIONS data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
+# cat("\n", prompt, "\n\n")
+# filename <- tcltk::tk_choose.files(caption = prompt,
+#                                    default = file.path(getwd(),
+#                                                        "output",
+#                                                        "40_best_RP_names.RData"),
+#                                    filter = matrix(c("RData", ".RData",
+#                                                      "CSV", ".csv",
+#                                                      "All files", ".*"),
+#                                                    3, 2, byrow = TRUE),
+#                                    multi = FALSE)
+# #load in the data based on the type of data file provided
+# if(grepl(x = filename, pattern = "\\.RData$"))
+# {
+#   load(file = filename)
+#   projection_directions <- sortedCandidateNames
+#     
+# }else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
+# {
+#   projection_directions <- read_csv(file = filename)
+#   
+# }else
+# {
+#   message("Invalid Data Filetype.")
+#   return
+# }
+#read the PROJECTIONS data file
+prompt <- "*****Select the PROJECTIONS data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
+cat("\n", prompt, "\n\n")
+filename <- tcltk::tk_choose.files(caption = prompt,
+                                   default = file.path(getwd(),
+                                                       "output",
+                                                       "30_projections.RData"),
+                                   filter = matrix(c("RData", ".RData",
+                                                     "CSV", ".csv",
+                                                     "All files", ".*"),
+                                                   3, 2, byrow = TRUE),
+                                   multi = FALSE)
+#load in the data based on the type of data file provided
+if(grepl(x = filename, pattern = "\\.RData$"))
+{
+  load(file = filename)
+  projection_directions <- projection
+  
+}else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
+{
+  projection_directions <- read_csv(file = filename)
+}else
+{
+  message("Invalid Data Filetype.")
+  return
+}
 
-# ##Read file containing HMM parameters for users
-# probMatrix <- read.csv(paste0(path_output, "hmmParameters_", course, ".csv"), row.names = 1)
-# ##Load the courseware_studentModule.sql file
-# ##This file contains the list of all student_ids who have accessed atleast one module in the course
-# courseware_studModule <- read_tsv(paste0(path_files, "courseware_studModule_", course, ".sql"))
-# courseware_studModule <- as.data.frame(courseware_studModule)
-# ##Number of students who have had any access activity in course. Required for calculating percentage of students in profiles
-# n_learners <- length(unique(courseware_studModule$student_id))
-n_learners <- 1000  #TODO(fix this)
+#read the CLEAN probability matrix CSV file
+prompt <- "*****Select the CLEAN PROBABILITY MATRIX file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
+cat("\n", prompt)
+filename <- tcltk::tk_choose.files(caption = prompt,
+                                   default = file.path(getwd(),
+                                                       "output",
+                                                       "10_passForwardData_CPM.RData"),
+                                   filter = matrix(c("RData", ".RData",
+                                                     "CSV", ".csv",
+                                                     "All files", ".*"),
+                                                   3, 2, byrow = TRUE),
+                                   multi = FALSE)
+#load in the data based on the type of data file provided
+if(grepl(x = filename, pattern = "\\.RData$"))
+{
+  objs <- load(file = filename, verbose = T)
+  probMatrix <- stu_LO_FV
+  probMatrix <- rownames_to_column(probMatrix)
+  names(probMatrix)[1] <- "userID"
+  
+}else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
+{
+  probMatrix <- read_csv(file = filename)
+  
+}else
+{
+  message("Invalid Data Filetype.")
+  break
+}
+
+##Number of students in course. Required for calculating percentage of students in profiles
+n_learners <- length(probMatrix$userID)
 
 ##Take the number of best directions to consider for profiling
 n_directions <- readline(prompt = "Please enter the number of best projection directions to consider for profiling : \n")
 n_directions <- as.integer(n_directions)
 
 ##Extract the names of the best projection directions
-best_direction_names <- rownames(W_values)[1:n_directions]
-best_direction_names <- gsub(x = best_direction_names, pattern = "RP1D", replacement = "RV")
+minW_RandVec_sort <- rownames_to_column(minW_RandVec_sort)
+names(minW_RandVec_sort)[1] <- "RV_id"
+
+best_direction_names <- minW_RandVec_sort$RV_id[1:n_directions]
+# best_direction_names <- gsub(x = best_direction_names, pattern = "RP1D", replacement = "RV")
+
+
 
 ##Form a dataFrame of n_directions columns and column = i is ith best projection direction
 best_directions <- c()
+# best_directions <- minW_RandVec_sort$RV_id[1:n_directions]
 for(i in 1:n_directions)
 {
-  best_directions <- cbind(best_directions, projection_directions[,best_direction_names[i]])
+  best_directions <- cbind(best_directions, 
+                           projection_directions[, best_direction_names[i]])
 }
 best_directions <- as.data.frame(best_directions)
 ##Name columns using names of corresponding directions
 colnames(best_directions) <- best_direction_names
 
 ##Form a list of W values for best projection directions
-best_direction_thresholds <- W_values[1:n_directions, "Group.Threshold"]
+best_direction_thresholds <- minW_RandVec_sort[1:n_directions, "Group Threshold"]
+
+
+
+
+#########updates looking good till here 2020.02.05 16:11:11. ######
+#########
+#########
+#########
 
 ##Loop over learners and find cluster assignment along each best direction
 cluster_assignments <- c()
