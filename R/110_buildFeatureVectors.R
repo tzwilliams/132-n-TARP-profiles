@@ -170,7 +170,7 @@ stu_LO_FV <- tibble(student_id = student_IDs)
 for (i in 1:length(FV_names)) {
   stu_LO_FV <- stu_LO_FV %>% add_column(!!FV_names[i] := 0)
 }
-stu_LO_FV <- column_to_rownames(stu_LO_FV, var = "student_id")
+# stu_LO_FV <- column_to_rownames(stu_LO_FV, var = "student_id")
 
 
 
@@ -178,7 +178,9 @@ stu_LO_FV <- column_to_rownames(stu_LO_FV, var = "student_id")
 
 #For each student subset the LOs and calculate average LO proficiency 
 #   (TW Note: for now I'm ignoring the point value and working with the proficiency level)
-for (cur_stu in student_IDs) {
+for (j in 1:nrow(student_IDs)) {
+  cur_stu <- as.character(student_IDs[j, 1])
+  cur_stu_row <- stu_LO_FV[,1] == cur_stu
   cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
   
   for (LO in LO_subset){
@@ -198,13 +200,13 @@ for (cur_stu in student_IDs) {
                               proficiency_levels$label[proficiency_levels$rubric_column == level])
         
         # increment the count for this LO's profiency level
-        stu_LO_FV[cur_stu, cur_colName] <- (stu_LO_FV[cur_stu, cur_colName] + 1)
+        stu_LO_FV[cur_stu_row, cur_colName] <- (stu_LO_FV[cur_stu_row, cur_colName] + 1)
       }
       
       
       # calc probability for these LOs
-      stu_LO_FV[cur_stu, str_detect(string = FV_names, pattern = paste0("^", LO))] <- 
-        stu_LO_FV[cur_stu, str_detect(string = FV_names, pattern = paste0("^", LO))]/i
+      stu_LO_FV[,2:length(stu_LO_FV)][cur_stu_row, str_detect(string = FV_names, pattern = paste0("^", LO))] <- 
+        stu_LO_FV[,2:length(stu_LO_FV)][cur_stu_row, str_detect(string = FV_names, pattern = paste0("^", LO))]/i
     } # end IF
   } # end LO FOR
   
@@ -227,6 +229,7 @@ for (cur_stu in student_IDs) {
   cat(updateVars$toPrint)
   
 } # end stu FOR
+
 
 
 
