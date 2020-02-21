@@ -110,8 +110,16 @@ message("\nSaving Student IDs.\n")
 
 student_IDs <- as.data.frame( unique(data_raw_assessment$`User ID`) )
 
-# Rename column where names is "user_ID"
-names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
+
+#convert the factor version of the IDs to strings
+student_IDs2 <- NA  #create blank temp variable
+for(i in 1:nrow(student_IDs)) student_IDs2[i] <- toString(student_IDs[i,1])   
+student_IDs <- as_tibble(student_IDs2)   #replace column with string values
+rm(student_IDs2)  #clean temp variable
+colnames(student_IDs) <- "student_id"
+
+# # Rename column where names is "user_ID"
+# names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
 
 #write to CSV file
 write_csv(path = file.path("output", paste0("100_studentIDsUsed.csv")),

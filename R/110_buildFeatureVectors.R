@@ -69,15 +69,57 @@ load(file.path("output", paste0("100_assessmentData.RData")))
 # df_subset <- df[LO_ID_range, ]
 # LO_subset <- sort(unique(df_subset$LO_ID))
 
-# filter on the CO01 LOs
-LO_ID_range <- df$CO_ID == "CO01"
-df_subset <- df[LO_ID_range, ]
+
+# user selection of CO filtering
+repeat{
+  userSelection_filter <- readline(prompt="\n Would you like to use all assessments or only those from one CO?:
+Enter '0' for ALL assessments
+      '1' for only CO01
+      '2' for only CO02
+      '3' for only CO03
+      '4' for only CO04
+      '5' for only CO05");
+  
+  
+  
+  #exit loop and continue script if input valid
+  if(userSelection_filter == 0){
+    # no filter
+    df_subset <- df
+    break
+  } else if(userSelection_filter == 1){
+    # filter on the CO01 LOs
+    LO_ID_range <- df$CO_ID == "CO01"
+    df_subset <- df[LO_ID_range, ]
+    LO_subset <- sort(unique(df_subset$LO_ID))
+    break
+  } else if(userSelection_filter == 2){
+    # filter on the CO02 LOs
+    LO_ID_range <- df$CO_ID == "CO02"
+    df_subset <- df[LO_ID_range, ]
+    break
+  } else if(userSelection_filter == 3){
+    # filter on the CO03 LOs
+    LO_ID_range <- df$CO_ID == "CO03"
+    df_subset <- df[LO_ID_range, ]
+    break
+  } else if(userSelection_filter == 4){
+    # filter on the CO04 LOs
+    LO_ID_range <- df$CO_ID == "CO04"
+    df_subset <- df[LO_ID_range, ]
+    break
+  } else if(userSelection_filter == 5){
+    # filter on the CO05 LOs
+    LO_ID_range <- df$CO_ID == "CO05"
+    df_subset <- df[LO_ID_range, ]
+    break
+  }
+  
+  beepr::beep(sound = 10)   #notify user to provide input
+}   #repeat if none of the conditions were met (i.e., user input was invalid)
+
+#identify the LOs that remain in the dataset
 LO_subset <- sort(unique(df_subset$LO_ID))
-
-# filter on ALL LOs
-# LO_ID_range <- str_detect(string = df$LO_ID, pattern = "^01\\.\\d{2}")
-# df_subset <- df
-
 
 
 
@@ -164,7 +206,7 @@ for (LO in LO_subset) {
 
 
 # construct student FV table
-stu_LO_FV <- tibble(student_id = student_IDs)
+stu_LO_FV <- tibble(user_ID=student_IDs$student_id)
 
 # append feature vector names to the main table (init. values to 0)
 for (i in 1:length(FV_names)) {
@@ -219,7 +261,7 @@ for (j in 1:nrow(student_IDs)) {
   }
   
   #print function
-  updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), iCount, pct, displayText = "Student: ")
+  updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), iCount, pct, displayText = "Probability matrix: ")
   
   #update status variables (for next iteration)
   iCount <- updateVars$iCount
@@ -241,8 +283,8 @@ for (j in 1:nrow(student_IDs)) {
 message("\nSaving Feature vector files.\n")
 
 #write to CSV file
-write.csv(file = file.path("output", paste0("110_stuFeatureVector-", LO_lvl ,"_grouping.csv")), 
-          x = stu_LO_FV, row.names = T) 
+write_csv(path = file.path("output", paste0("110_stuFeatureVector-", LO_lvl ,"_grouping.csv")), 
+          x = stu_LO_FV, col_names = T) 
 #write to RData file
 save(stu_LO_FV, LO_lvl, 
      file = file.path("output", paste0("110_stuFeatureVector-", LO_lvl ,"_grouping.RData")),
