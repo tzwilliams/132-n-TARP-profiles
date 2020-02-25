@@ -1,9 +1,9 @@
 ## ===================================================== ##
-# Title:        Building Feature Vectors ####
+# Title:        Split data into training and verification sets ####
 # Project:      132 n-TARP Profiles
 #               https://github.com/tzwilliams/
 # 
-# Copyright 2018-19 Taylor Williams
+# Copyright 2020 Taylor Williams
 # 
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
@@ -55,6 +55,9 @@ rm(list=ls())
 
 
 
+######### Split the students into training and verification sets ######### 
+
+
 spliter <- runif(length(student_IDs$user_ID), 
                 min = 0, 
                 max = 1)
@@ -64,5 +67,7 @@ view(training)
 
 
 
+
+######### save IDs for data subsets to file ######### 
 write.csv(x = training, file = file.choose())
 write.csv(x = verification, file = file.choose())

@@ -33,6 +33,8 @@
 #                   
 # Feature wishlist:  (*: planned but not complete)
 #     * add functionality to the user selection of the threshold number of data points to include
+#     * create a new feature associated with each LO to record the observed probability that the student submitted anything for that LO during the semester
+#     * build feature vectors that do and don't include team assessments
 ## ===================================================== ##
 
 
@@ -72,7 +74,7 @@ load(file.path("output", paste0("100_assessmentData.RData")))
 
 # user selection of CO filtering
 repeat{
-  userSelection_filter <- readline(prompt="\n Would you like to use all assessments or only those from one CO?:
+  userSelection_filter <- readline(prompt="\n Would you like to use all assessments or only those from one CO (course objective)?:
 Enter '0' for ALL assessments
       '1' for only CO01
       '2' for only CO02
