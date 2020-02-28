@@ -98,10 +98,13 @@ student_IDs_complete <- as.data.frame( unique(data_raw_complete$`User ID`) )
 
 #convert the factor version of the IDs to strings
 student_IDs2 <- NA  #create blank temp variable
-for(i in 1:nrow(student_IDs_complete)) student_IDs2[i] <- toString(student_IDs_complete[i,1])   
-student_IDs_complete <- as_tibble(student_IDs2)   #replace column with string values
+for(i in 1:nrow(student_IDs_complete)) {
+  student_IDs2[i] <- toString(student_IDs_complete[i,1])   
+}
+
+student_IDs_complete <- enframe(student_IDs2, name = NULL)   #replace column with string values
 rm(student_IDs2)  #clean temp variable
-colnames(student_IDs_complete) <- "student_id"
+colnames(student_IDs_complete) <- "User ID"
 
 
 
@@ -112,13 +115,16 @@ colnames(student_IDs_complete) <- "student_id"
 student_IDs <- student_IDs_complete
 
 # create place to store the missing assessment items
-incomplete_students <- tibble(student_ID = as.character(),
+incomplete_students <- tibble('User ID' = as.character(),
                               'Rubric Row' = as.character(), 
-                              'Rubric Title' = as.character())
+                              'Rubric Title' = as.character(),
+                              'Rubric Column' = as.character())
+
+
 
 # loop through all students, checking for missing assessment items
 for (i in 1:nrow(student_IDs)) {
-  cur_stu <- as.character(student_IDs[i, 1]) #store the current student ID
+  cur_stu <- as.character(student_IDs[i, 'User ID']) #store the current student ID
   
   # extract the cur_stu's LO data
   cur_stu_data <- data_raw_complete[data_raw_complete$`User ID` == cur_stu, ]
@@ -131,107 +137,44 @@ for (i in 1:nrow(student_IDs)) {
   
   # add the student and their missing LO items to incomplete_students
   if(nrow(missing_items) > 0){
-    print(c(i, cur_stu))
     incomplete_students <- add_case(.data = incomplete_students, 
-                                    student_ID = cur_stu,
+                                    'User ID' = cur_stu,
                                     'Rubric Row' = missing_items$`Rubric Row`,
-                                    'Rubric Title' = missing_items$`Rubric Title`)
+                                    'Rubric Title' = missing_items$`Rubric Title`,
+                                    'Rubric Column' = "No Submission")
+  }
+  
+  
+  #| print completion progress to console   ####
+  #durring first iteration, create progress status variables for main processing loop
+  if(i == 1)
+  {
+    iCount <- 0 #initialize loop counter for completion updates
+    pct <- 0  #initialize percentage complete tracker
     
-    #| print completion progress to console   ####
-    #durring first iteration, create progress status variables for main processing loop
-    if(i == 1)
-    {
-      iCount <- 0 #initialize loop counter for completion updates
-      pct <- 0  #initialize percentage complete tracker
-      
-    }else{
-      #print function
-      updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), 
-                                           iCount, pct, displayText = "Missing data search: ")
-  
-      #update status variables (for next iteration)
-      iCount <- updateVars$iCount
-      pct <- updateVars$pct
-  
-      #print update
-      cat(updateVars$toPrint)
-    }
+  }else{
+    #print function
+    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), 
+                                         iCount, pct, displayText = "Missing data search: ")
+
+    #update status variables (for next iteration)
+    iCount <- updateVars$iCount
+    pct <- updateVars$pct
+
+    #print update
+    cat(updateVars$toPrint)
+  }
 
     
-  }
 }
 
 
 
-      # #For each student subset the LOs and calculate average LO proficiency 
-      # for (j in 1:nrow(student_IDs)) {
-      #   cur_stu <- as.character(student_IDs[j, 1])
-        # cur_stu_row <- stu_LO_FV[,1] == cur_stu
-        # cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
-      #   
-      #   for (LO in LO_subset){
-      #     cur_assessments <- cur_stu_LOs[cur_stu_LOs[[LO_lvl]] == LO, "Rubric Column"]
-      #     # LO_value_sum <- 0.0
-      #     
-      #     if(nrow(cur_assessments) > 0){
-      #       # loop through the recorded proficencies for the current LO
-      #       for (i in 1:length(cur_assessments$`Rubric Column`)){
-      #         level <- cur_assessments$`Rubric Column`[[i]]
-      #         
-      #         # LO_value_sum <- LO_value_sum +
-      #         #   proficiency_levels[proficiency_levels$rubric_column == level, "value"]
-      #         
-      #         # convert proficency level into the column name format for this specific LO
-      #         cur_colName <- paste0(LO, " - ",
-      #                               proficiency_levels$label[proficiency_levels$rubric_column == level])
-      #         
-      #         # increment the count for this LO's profiency level
-      #         stu_LO_FV[cur_stu_row, cur_colName] <- (stu_LO_FV[cur_stu_row, cur_colName] + 1)
-      #       }
-      #       
-      #       
-      #       # calc probability for these LOs
-      #       stu_LO_FV[,2:length(stu_LO_FV)][cur_stu_row, str_detect(string = FV_names, pattern = paste0("^", LO))] <- 
-      #         stu_LO_FV[,2:length(stu_LO_FV)][cur_stu_row, str_detect(string = FV_names, pattern = paste0("^", LO))]/i
-      #     } # end IF
-      #   } # end LO FOR
-      #   
-      #   #| print completion progress to console   ####
-      #   #durring first iteration, create progress status variables for main processing loop
-      #   if(cur_stu==student_IDs[1])
-      #   {
-      #     iCount <- 0 #loop counter for completion updates
-      #     pct <- 0  #percentage complete tracker
-      #   }
-      #   
-      #   #print function
-      #   updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), iCount, pct, displayText = "Probability matrix: ")
-      #   
-      #   #update status variables (for next iteration)
-      #   iCount <- updateVars$iCount
-      #   pct <- updateVars$pct
-      #   
-      #   #print update
-      #   cat(updateVars$toPrint)
-      #   
-      # } # end stu FOR
-      # 
+
+# add in the missing rows with "Did Not Attempt" rating
+data_raw2_wMissing <- bind_rows(data_raw_complete, incomplete_students)
 
 
-
-
-
-
-
-
-# add in the missing rows with "no attempt" rating
-
-
-
-
-
-
-# calculate missing submission percentage [this step may belong in a later script]
 
 
 
@@ -249,9 +192,10 @@ for (i in 1:nrow(student_IDs)) {
 message("\nSaving Feature vector files.\n")
 
 #write to CSV file
-write_csv(path = file.path("output", paste0(".csv")), 
-          x = , col_names = T) 
+write_csv(path = file.path("output", paste0("060_missingData.csv")), 
+          x = data_raw2_wMissing, col_names = T) 
 #write to RData file
-save(, 
-     file = file.path("output", paste0(".RData")),
+save(data_raw_complete, data_raw2_wMissing, unique_items,
+     student_IDs_complete, incomplete_students, 
+     file = file.path("output", paste0("060_missingData.RData")),
      precheck = TRUE, compress = TRUE)

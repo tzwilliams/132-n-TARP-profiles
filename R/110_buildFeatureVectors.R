@@ -219,9 +219,9 @@ for (i in 1:length(FV_names)) {
 
 
 
-
-#For each student subset the LOs and calculate average LO proficiency 
-#   (TW Note: for now I'm ignoring the point value and working with the proficiency level)
+#### .calculate average LO proficiency ####
+# ..v1. straight assessment levels ####
+# For each student subset the LOs and calculate average LO proficiency level
 for (j in 1:nrow(student_IDs)) {
   cur_stu <- as.character(student_IDs[j, 1])
   cur_stu_row <- stu_LO_FV[,1] == cur_stu
@@ -276,6 +276,60 @@ for (j in 1:nrow(student_IDs)) {
 
 
 
+# ..v2. With constructed missing assessment percentage  ####
+####  #### VERY INCOMPLETE!!! ####  ####
+####  
+####  
+# calculate missing submission percentage 
+
+# create place to store the missing assessment items
+missing_cnt <- tibble('User ID' = as.character(),
+                      'Missing item count' = as.integer())
+
+for (i in 1:nrow(student_IDs)) {
+  cur_stu <- as.character(student_IDs[i, 'User ID']) #store the current student ID
+  
+  # extract the cur_stu's LO data
+  cur_stu_data <- df[df$`User ID` == cur_stu, ]
+  
+  # identify the items the cur_stu was missing
+  cur_missing_cnt <- sum(cur_stu_data$`Rubric Column` == "Did Not Attempt") +
+    sum(cur_stu_data$`Rubric Column` == "No Attempt")
+  
+  
+  # add the student and their missing LO items to incomplete_students
+  missing_cnt <- add_case(.data = missing_cnt,
+                          'User ID' = cur_stu,
+                          'Missing item count' = cur_missing_cnt)
+  
+  
+  #| print completion progress to console   ####
+  #durring first iteration, create progress status variables for main processing loop
+  if(i == 1)
+  {
+    iCount <- 0 #initialize loop counter for completion updates
+    pct <- 0  #initialize percentage complete tracker
+    
+  }else{
+    #print function
+    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), 
+                                         iCount, pct, displayText = "Missing data count: ")
+    
+    #update status variables (for next iteration)
+    iCount <- updateVars$iCount
+    pct <- updateVars$pct
+    
+    #print update
+    cat(updateVars$toPrint)
+  }
+  
+  
+}
+
+
+####  
+####  
+####  #### VERY INCOMPLETE!!! ####  ####
 
 
 
