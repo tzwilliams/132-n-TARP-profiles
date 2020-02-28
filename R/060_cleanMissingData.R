@@ -192,10 +192,10 @@ data_raw2_wMissing <- bind_rows(data_raw_complete, incomplete_students)
 message("\nSaving Feature vector files.\n")
 
 #write to CSV file
-write_csv(path = file.path("output", paste0("060_missingData.csv")), 
-          x = data_raw2_wMissing, col_names = T) 
+write_csv(path = file.path("output", paste0("060_assessmentData_wMissing.csv")),
+          x = data_raw2_wMissing, col_names = T)
 #write to RData file
 save(data_raw_complete, data_raw2_wMissing, unique_items,
-     student_IDs_complete, incomplete_students, 
-     file = file.path("output", paste0("060_missingData.RData")),
+     student_IDs_complete, incomplete_students,
+     file = file.path("output", paste0("060_assessmentData_wMissing+.RData")),
      precheck = TRUE, compress = TRUE)
