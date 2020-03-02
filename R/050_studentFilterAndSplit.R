@@ -29,10 +29,11 @@
 # Changelog:
 #   2020.02.??.   Initial code
 #   2020.02.19.   Added header and other documentation
+#   2020.02.28.   retrieved student list from gradebook and split into sections
 #     
 #                   
 # Feature wishlist:  (*: planned but not complete)
-#     * The script is very incomplete, almost all initialization section still need to be added
+#     * 
 ## ===================================================== ##
 
 
@@ -46,7 +47,8 @@ rm(list=ls())
 
 ######### Setup ##########
 #load required packages
-
+require(tidyverse)
+require(readxl)
 
 ######### Read Data ##########
 # _import the LO mapping data ####
@@ -117,17 +119,24 @@ set.seed(123)
 spliter <- runif(length(stu_sections$`User ID`), 
                 min = 0, 
                 max = 1)
-ID_split_training <- stu_sections$`User ID`[spliter <= 0.80, ]
-ID_split_verification <- stu_sections$`User ID`[spliter < 0.20, ]
+ID_split_training <- stu_sections[spliter <= 0.80, "User ID"]
+ID_split_verification <- stu_sections[spliter < 0.20, "User ID"]
 
 
-
+# record the data split in the complete list
+stu_sections <- add_column(.data = stu_sections, training_set = (spliter <= 0.80))
 
 
 
 ######### save IDs for data subsets to file ######### 
-write.csv(x = ID_split_training, file = file.path("output", paste0("050_studentList-training.csv")))
-write.csv(x = ID_split_verification, file = file.path("output", paste0("050_studentList-verification.csv")))
+message("\nSaving student ID list files.\n")
+
+write_csv(x = ID_split_training, 
+          path = file.path("output", paste0("050_studentList-training-80pct.csv")), 
+          col_names = T)
+write_csv(x = ID_split_verification, 
+          path = file.path("output", paste0("050_studentList-verification-20pct.csv")),
+          col_names = T)
 save(ID_split_training, ID_split_verification,
      stu_sections, sections, 
      file = file.path("output", paste0("050_studentsAndSplit.RData")),

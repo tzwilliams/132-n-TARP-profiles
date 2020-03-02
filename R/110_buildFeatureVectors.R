@@ -3,7 +3,7 @@
 # Project:      132 n-TARP Profiles
 #               https://github.com/tzwilliams/
 # 
-# Copyright 2018-19 Taylor Williams
+# Copyright 2018-20 Taylor Williams
 # 
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
@@ -87,33 +87,32 @@ Enter '0' for ALL assessments
   #exit loop and continue script if input valid
   if(userSelection_filter == 0){
     # no filter
-    df_subset <- df
+    df_subset <- data_raw3_assessment_training    
     break
   } else if(userSelection_filter == 1){
     # filter on the CO01 LOs
-    LO_ID_range <- df$CO_ID == "CO01"
-    df_subset <- df[LO_ID_range, ]
-    LO_subset <- sort(unique(df_subset$LO_ID))
+    LO_ID_range <- data_raw3_assessment_training$CO_ID == "CO01"
+    df_subset <- data_raw3_assessment_training[LO_ID_range, ]
     break
   } else if(userSelection_filter == 2){
     # filter on the CO02 LOs
-    LO_ID_range <- df$CO_ID == "CO02"
-    df_subset <- df[LO_ID_range, ]
+    LO_ID_range <- data_raw3_assessment_training$CO_ID == "CO02"
+    df_subset <- data_raw3_assessment_training[LO_ID_range, ]
     break
   } else if(userSelection_filter == 3){
     # filter on the CO03 LOs
-    LO_ID_range <- df$CO_ID == "CO03"
-    df_subset <- df[LO_ID_range, ]
+    LO_ID_range <- data_raw3_assessment_training$CO_ID == "CO03"
+    df_subset <- data_raw3_assessment_training[LO_ID_range, ]
     break
   } else if(userSelection_filter == 4){
     # filter on the CO04 LOs
-    LO_ID_range <- df$CO_ID == "CO04"
-    df_subset <- df[LO_ID_range, ]
+    LO_ID_range <- data_raw3_assessment_training$CO_ID == "CO04"
+    df_subset <- data_raw3_assessment_training[LO_ID_range, ]
     break
   } else if(userSelection_filter == 5){
     # filter on the CO05 LOs
-    LO_ID_range <- df$CO_ID == "CO05"
-    df_subset <- df[LO_ID_range, ]
+    LO_ID_range <- data_raw3_assessment_training$CO_ID == "CO05"
+    df_subset <- data_raw3_assessment_training[LO_ID_range, ]
     break
   }
   
@@ -189,16 +188,19 @@ Enter '1' to include all available assessments,
 #   
 ## build LO level feature vectors (FV)
 # construct column names for feature vectors
-proficiency_levels <- tibble(value = c(4,3,2,1,0,0),
+proficiency_levels <- tibble(value = c(4,3,2,1,0,0,0),
                              label = c("4_Proficient", "3_Developing", 
                                        "2_Emerging", "1_Insufficient Evidence", 
-                                       "0_No Attempt", "0_Did Not Attempt"), 
+                                       "0_No Attempt", "0_Did Not Attempt",
+                                       "0_No Submission"), 
                              rubric_column =  c("Proficient", "Developing", 
                                                 "Emerging", "Insufficient Evidence", 
-                                                "No Attempt", "Did Not Attempt"), 
+                                                "No Attempt", "Did Not Attempt",
+                                                "No Submission"), 
                              rubric_column_alt =  c("", "", 
                                                     "", "", 
-                                                    "", ""))
+                                                    "", "",
+                                                    ""))
 
 # make list of FV name
 FV_names <- character()
@@ -208,7 +210,7 @@ for (LO in LO_subset) {
 
 
 # construct student FV table
-stu_LO_FV <- tibble(user_ID=student_IDs$student_id)
+stu_LO_FV <- tibble("User ID" = stu_sections$`User ID`)
 
 # append feature vector names to the main table (init. values to 0)
 for (i in 1:length(FV_names)) {
@@ -222,16 +224,19 @@ for (i in 1:length(FV_names)) {
 #### .calculate average LO proficiency ####
 # ..v1. straight assessment levels ####
 # For each student subset the LOs and calculate average LO proficiency level
-for (j in 1:nrow(student_IDs)) {
-  cur_stu <- as.character(student_IDs[j, 1])
+for (j in 1:nrow(stu_sections)) {
+  cur_stu <- as.character(stu_sections[j, 1])
   cur_stu_row <- stu_LO_FV[,1] == cur_stu
   cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
   
+  # loop through all the levels of the selected LO grouping
   for (LO in LO_subset){
     cur_assessments <- cur_stu_LOs[cur_stu_LOs[[LO_lvl]] == LO, "Rubric Column"]
     # LO_value_sum <- 0.0
     
+    # loop through all the _____
     if(nrow(cur_assessments) > 0){
+      
       # loop through the recorded proficencies for the current LO
       for (i in 1:length(cur_assessments$`Rubric Column`)){
         level <- cur_assessments$`Rubric Column`[[i]]
@@ -256,14 +261,15 @@ for (j in 1:nrow(student_IDs)) {
   
   #| print completion progress to console   ####
   #durring first iteration, create progress status variables for main processing loop
-  if(cur_stu==student_IDs[1])
+  if(j==1)
   {
     iCount <- 0 #loop counter for completion updates
     pct <- 0  #percentage complete tracker
   }
   
   #print function
-  updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), iCount, pct, displayText = "Probability matrix: ")
+  updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(stu_sections), 
+                                       iCount, pct, displayText = "Probability matrix: ")
   
   #update status variables (for next iteration)
   iCount <- updateVars$iCount
@@ -273,6 +279,21 @@ for (j in 1:nrow(student_IDs)) {
   cat(updateVars$toPrint)
   
 } # end stu FOR
+
+
+######### Save data to file #########
+##Save assessment data to file ####
+message("\nSaving feature vector files.\n")
+
+#write to CSV file
+write_csv(path = file.path("output", paste0("110_stuFeatureVector_straight-", LO_lvl ,"_grouping.csv")), 
+          x = stu_LO_FV, col_names = T) 
+#write to RData file
+save(stu_LO_FV, LO_lvl, 
+     file = file.path("output", paste0("110_stuFeatureVector_straight-", LO_lvl ,"_grouping.RData")),
+     precheck = TRUE, compress = TRUE)
+
+
 
 
 
@@ -286,18 +307,19 @@ for (j in 1:nrow(student_IDs)) {
 missing_cnt <- tibble('User ID' = as.character(),
                       'Missing item count' = as.integer())
 
-for (i in 1:nrow(student_IDs)) {
-  cur_stu <- as.character(student_IDs[i, 'User ID']) #store the current student ID
+for (i in 1:nrow(stu_sections)) {
+  cur_stu <- as.character(stu_sections[i, 'User ID']) #store the current student ID
   
   # extract the cur_stu's LO data
-  cur_stu_data <- df[df$`User ID` == cur_stu, ]
+  cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
   
-  # identify the items the cur_stu was missing
-  cur_missing_cnt <- sum(cur_stu_data$`Rubric Column` == "Did Not Attempt") +
-    sum(cur_stu_data$`Rubric Column` == "No Attempt")
+  # identify the number of items the cur_stu was missing
+  cur_missing_cnt <- sum(cur_stu_LOs$`Rubric Column` == "Did Not Attempt") +
+    sum(cur_stu_LOs$`Rubric Column` == "No Attempt") +
+    sum(cur_stu_LOs$`Rubric Column` == "No Submission")
   
   
-  # add the student and their missing LO items to incomplete_students
+  # add the student and their missing LO items to missing_cnt
   missing_cnt <- add_case(.data = missing_cnt,
                           'User ID' = cur_stu,
                           'Missing item count' = cur_missing_cnt)
@@ -312,7 +334,7 @@ for (i in 1:nrow(student_IDs)) {
     
   }else{
     #print function
-    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), 
+    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(stu_sections), 
                                          iCount, pct, displayText = "Missing data count: ")
     
     #update status variables (for next iteration)

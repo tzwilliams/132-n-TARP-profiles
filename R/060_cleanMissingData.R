@@ -80,31 +80,31 @@ for (i in 1:nrow(LO_mapping)) {
 
 
 # _import BlackBoard LO data in CSV format ####
-data_raw_complete <- read_csv(#file = file.choose(),
+data_raw_orig <- read_csv(#file = file.choose(),
   file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
 
 
 
 # get unique list of items that should have been assessed for each student
-unique_items <- unique(data_raw_complete[c('Rubric Row', 'Rubric Title')])
-
-
+unique_items <- unique(data_raw_orig[c('Rubric Row', 'Rubric Title')])
 
 
 
 # find complete list of Student IDs
-student_IDs_complete <- as.data.frame( unique(data_raw_complete$`User ID`) )
+# student_IDs_complete <- as.data.frame( unique(data_raw_orig$`User ID`) )
+load(file = file.path("output", paste0("050_studentsAndSplit.RData")))  # list of students still enrolled at the end of the course
+student_IDs_complete <- as.data.frame( unique(stu_sections) )
 
 
-#convert the factor version of the IDs to strings
-student_IDs2 <- NA  #create blank temp variable
-for(i in 1:nrow(student_IDs_complete)) {
-  student_IDs2[i] <- toString(student_IDs_complete[i,1])   
-}
-
-student_IDs_complete <- enframe(student_IDs2, name = NULL)   #replace column with string values
-rm(student_IDs2)  #clean temp variable
-colnames(student_IDs_complete) <- "User ID"
+# #convert the factor version of the IDs to strings
+# student_IDs2 <- NA  #create blank temp variable
+# for(i in 1:nrow(student_IDs_complete)) {
+#   student_IDs2[i] <- toString(student_IDs_complete[i,1])   
+# }
+# 
+# student_IDs_complete <- enframe(student_IDs2, name = NULL)   #replace column with string values
+# rm(student_IDs2)  #clean temp variable
+# colnames(student_IDs_complete) <- "User ID"
 
 
 
@@ -112,7 +112,9 @@ colnames(student_IDs_complete) <- "User ID"
 
 
 # check for presence of a assessment value for each item for each student
-student_IDs <- student_IDs_complete
+# student_IDs <- student_IDs_complete
+student_IDs <- enframe(student_IDs_complete$`User ID`, name = NULL)
+colnames(student_IDs) <- "User ID"
 
 # create place to store the missing assessment items
 incomplete_students <- tibble('User ID' = as.character(),
@@ -127,7 +129,7 @@ for (i in 1:nrow(student_IDs)) {
   cur_stu <- as.character(student_IDs[i, 'User ID']) #store the current student ID
   
   # extract the cur_stu's LO data
-  cur_stu_data <- data_raw_complete[data_raw_complete$`User ID` == cur_stu, ]
+  cur_stu_data <- data_raw_orig[data_raw_orig$`User ID` == cur_stu, ]
 
   # identify the items the cur_stu has records for
   cur_items <- unique(cur_stu_data[c('Rubric Row', 'Rubric Title')])
@@ -172,16 +174,7 @@ for (i in 1:nrow(student_IDs)) {
 
 
 # add in the missing rows with "Did Not Attempt" rating
-data_raw2_wMissing <- bind_rows(data_raw_complete, incomplete_students)
-
-
-
-
-
-
-
-
-
+data_raw2_wMissing <- bind_rows(data_raw_orig, incomplete_students)
 
 
 
@@ -195,7 +188,7 @@ message("\nSaving Feature vector files.\n")
 write_csv(path = file.path("output", paste0("060_assessmentData_wMissing.csv")),
           x = data_raw2_wMissing, col_names = T)
 #write to RData file
-save(data_raw_complete, data_raw2_wMissing, unique_items,
+save(data_raw_orig, data_raw2_wMissing, unique_items,
      student_IDs_complete, incomplete_students,
      file = file.path("output", paste0("060_assessmentData_wMissing+.RData")),
      precheck = TRUE, compress = TRUE)

@@ -90,53 +90,53 @@ for (i in 1:nrow(LO_mapping)) {
 
 
 
-# _import BlackBoard LO data in CSV format ####
-data_raw_complete <- read_csv(#file = file.choose(),
-                                file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
-
+# # _import BlackBoard LO data in CSV format ####
+# data_raw_complete <- read_csv(#file = file.choose(),
+#                                 file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
+# _import BlackBoard LO data with missing rows added (from 060) ####
+load(file = file.path("output", paste0("060_assessmentData_wMissing+.RData")))
 
 
 # _import training set of Student IDs ####
-training_ids <- read_csv(#file = file.choose(),
-  file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\2020.02.17. 80-20 data split\\050_studentIDs_trainingSet_80pct.csv")
-
-  #filter on the training data points (Assuming the training ids are in a column named 'x')
-data_raw_assessment <- data_raw_complete[data_raw_complete$`User ID` %in% training_ids$x, ] 
+# training_ids <- read_csv(#file = file.choose(),
+  # file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\2020.02.17. 80-20 data split\\050_studentIDs_trainingSet_80pct.csv")
+load(file = file.path("output", paste0("050_studentsAndSplit.RData")))
 
 
-######### export Student IDs to file ##########
-#Save Student IDs to file ####
-message("\nSaving Student IDs.\n")
-
-student_IDs <- as.data.frame( unique(data_raw_assessment$`User ID`) )
-
-
-#convert the factor version of the IDs to strings
-student_IDs2 <- NA  #create blank temp variable
-for(i in 1:nrow(student_IDs)) student_IDs2[i] <- toString(student_IDs[i,1])   
-student_IDs <- as_tibble(student_IDs2)   #replace column with string values
-rm(student_IDs2)  #clean temp variable
-colnames(student_IDs) <- "student_id"
-
-# # Rename column where names is "user_ID"
-# names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
-
-#write to CSV file
-write_csv(path = file.path("output", paste0("100_studentIDsUsed.csv")),
-          x = student_IDs)
+# 
+# ######### export Student IDs to file ##########
+# #Save Student IDs to file ####
+# message("\nSaving Student IDs.\n")
+# 
+# student_IDs <- as.data.frame( unique(data_raw_assessment$`User ID`) )
+# 
+# 
+# #convert the factor version of the IDs to strings
+# student_IDs2 <- NA  #create blank temp variable
+# for(i in 1:nrow(student_IDs)) student_IDs2[i] <- toString(student_IDs[i,1])   
+# student_IDs <- as_tibble(student_IDs2)   #replace column with string values
+# rm(student_IDs2)  #clean temp variable
+# colnames(student_IDs) <- "student_id"
+# 
+# # # Rename column where names is "user_ID"
+# # names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
+# 
+# #write to CSV file
+# write_csv(path = file.path("output", paste0("100_studentIDsUsed.csv")),
+#           x = student_IDs)
 
 
 
 
 ######### Clean Data ##########
 # extract the numeric LO IDs
-LO_ID <- str_match(string = data_raw_assessment$`Rubric Row`, pattern = "\\d{2}\\.\\d{2}")[,1]
+LO_ID <- str_match(string = data_raw2_wMissing$`Rubric Row`, pattern = "\\d{2}\\.\\d{2}")[,1]
 
 # build working dataframe and add LO_ID column
-df <- as_tibble(data_raw_assessment)
+df <- as_tibble(data_raw2_wMissing)
 df <- df %>% add_column("LO_ID" = LO_ID)
 
-# lookup CC_ID and CO_ID from th LO_mapping data
+# lookup CC_ID and CO_ID from the LO_mapping data
 df <- add_column(.data = df,
                  "CC_ID" = NA,
                  "CO_ID" = NA)
@@ -166,6 +166,15 @@ for (i in 1:nrow(df)) {
 
 }
 
+data_raw3_assessment_all <- df
+
+#filter on the training data points 
+data_raw3_assessment_training <- 
+  data_raw3_assessment_all[data_raw3_assessment_all$`User ID` %in% ID_split_training$`User ID`, ] 
+#filter on the training data points 
+data_raw3_assessment_verification <- 
+  data_raw3_assessment_all[data_raw3_assessment_all$`User ID` %in% ID_split_verification$`User ID`, ] 
+
 
 
 
@@ -173,10 +182,11 @@ for (i in 1:nrow(df)) {
 message("\nSaving assessment files.\n")
 
 #write to CSV file
-write_csv(path = file.path("output", paste0("100_assessmentData.csv")),
-          x = df)
+write_csv(path = file.path("output", paste0("100_assessmentData_complete.csv")),
+          x = data_raw3_assessment_all)
 #write to RData file
-save(df, student_IDs, 
+save(data_raw3_assessment_all, stu_sections, 
+     data_raw3_assessment_verification, data_raw3_assessment_training,
      file = file.path("output", paste0("100_assessmentData.RData")),
      precheck = TRUE, compress = TRUE)
 
