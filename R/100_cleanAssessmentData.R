@@ -130,16 +130,24 @@ load(file = file.path("output", paste0("050_studentsAndSplit.RData")))
 
 ######### Clean Data ##########
 # extract the numeric LO IDs
-LO_ID <- str_match(string = data_raw2_wMissing$`Rubric Row`, pattern = "\\d{2}\\.\\d{2}")[,1]
+LO_ID <- str_match(string = data_raw2_wMissing$`Rubric Row`, 
+                   pattern = "\\d{2}\\.\\d{2}")[,1]
 
-# build working dataframe and add LO_ID column
+# (boolean) determine if the student submitted anything for the item
+item_submitted_TF <- str_detect(string = data_raw2_wMissing$`Rubric Column`, 
+                                pattern = "(No Attempt)|(Did Not Attempt)|(No Submission)")
+
+
+
+# build working dataframe and add columns for LO/CC/CO IDs and a boolean value for if the item was submitted 
 df <- as_tibble(data_raw2_wMissing)
-df <- df %>% add_column("LO_ID" = LO_ID)
+df <- df %>% add_column("LO_ID" = as.character(LO_ID),
+                  "CC_ID" = as.character(NA),
+                  "CO_ID" = as.character(NA),
+                  "item_submitted_TF" = as.logical(item_submitted_TF))
+
 
 # lookup CC_ID and CO_ID from the LO_mapping data
-df <- add_column(.data = df,
-                 "CC_ID" = NA,
-                 "CO_ID" = NA)
 for (i in 1:nrow(df)) {
   # df$LO_ID[i]     <- str_extract(string = LO_mapping$`LO# Learning Objective`[i],
   #                                        pattern = "\\d{2}\\.\\d{2}")
@@ -191,16 +199,16 @@ save(data_raw3_assessment_all, stu_sections,
      precheck = TRUE, compress = TRUE)
 
 
-
-
-## comparing defined vs used LOs #### 
-LOs_in_map <- as.tibble(sort(unique(LO_mapping$LO_ID)))
-LOs_in_assessment <- as.tibble(sort(unique(df$LO_ID)))
-
-LOs_unused <- anti_join(LOs_in_map, LOs_in_assessment)
-
-
-
-# get list of all student IDs in the dataset
-student_ids_all <- unique(df$"User ID")
-
+# 
+# 
+# ## comparing defined vs used LOs #### 
+# LOs_in_map <- as.tibble(sort(unique(LO_mapping$LO_ID)))
+# LOs_in_assessment <- as.tibble(sort(unique(df$LO_ID)))
+# 
+# LOs_unused <- anti_join(LOs_in_map, LOs_in_assessment)
+# 
+# 
+# 
+# # get list of all student IDs in the dataset
+# student_ids_all <- unique(df$"User ID")
+# 
