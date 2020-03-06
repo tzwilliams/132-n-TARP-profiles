@@ -76,7 +76,8 @@ for (i in 1:nrow(LO_mapping)) {
   LO_mapping$CO_ID[i]     <- str_extract(string = LO_mapping$`CO# Course Goal`[i],
                                          pattern = "CO\\d{2}")
 }
-
+# inport student lists
+load(file = file.path("output", paste0("050_studentsAndSplit.RData")))  # list of students still enrolled at the end of the course
 
 
 # _import BlackBoard LO data in CSV format ####
@@ -92,90 +93,21 @@ unique_items <- unique(data_raw_orig[c('Rubric Row', 'Rubric Title')])
 
 # find complete list of Student IDs
 # student_IDs_complete <- as.data.frame( unique(data_raw_orig$`User ID`) )
-load(file = file.path("output", paste0("050_studentsAndSplit.RData")))  # list of students still enrolled at the end of the course
 student_IDs_complete <- as.data.frame( unique(stu_sections) )
 
 
 # New ID column for unique items
-data_raw_060v2 <- data_raw_orig %>% 
+data_raw060v2 <- data_raw_orig %>% 
   mutate(assmt_item_ID = paste(`Rubric Title`, "---", `Rubric Row`))
 
 
-# fill in missing rows
-data_raw_060v2 -> data_raw_060v2 %>% expand(`User ID`, assmt_item_ID)
+# add in missing rows (missing item/user pairs) and mark the assessment as "No Submission"
+# data_raw060v2 <- data_raw060v2 %>% expand(`User ID`, assmt_item_ID)
+data_raw060v2.1 <- data_raw060v2 %>% complete(`User ID`, assmt_item_ID, 
+                                              fill = list(`Rubric Column` = "No Submission"))
 
+# intersect(y = data_raw060v2.1, x = data_raw060v2, by = "User ID")
 
-
-
-
-
-######## v1 code follows ######
-######## 
-
-# check for presence of a assessment value for each item for each student
-# student_IDs <- student_IDs_complete
-student_IDs <- enframe(student_IDs_complete$`User ID`, name = NULL)
-colnames(student_IDs) <- "User ID"
-
-# create place to store the missing assessment items
-incomplete_students <- tibble('User ID' = as.character(),
-                              'Rubric Row' = as.character(), 
-                              'Rubric Title' = as.character(),
-                              'Rubric Column' = as.character())
-
-
-
-# loop through all students, checking for missing assessment items
-for (i in 1:nrow(student_IDs)) {
-  cur_stu <- as.character(student_IDs[i, 'User ID']) #store the current student ID
-  
-  # extract the cur_stu's LO data
-  cur_stu_data <- data_raw_orig[data_raw_orig$`User ID` == cur_stu, ]
-
-  # identify the items the cur_stu has records for
-  cur_items <- unique(cur_stu_data[c('Rubric Row', 'Rubric Title')])
-
-  # check for any missing items for the current student 
-  missing_items <- suppressMessages(anti_join(unique_items, cur_items))
-  
-  # add the student and their missing LO items to incomplete_students
-  if(nrow(missing_items) > 0){
-    incomplete_students <- add_case(.data = incomplete_students, 
-                                    'User ID' = cur_stu,
-                                    'Rubric Row' = missing_items$`Rubric Row`,
-                                    'Rubric Title' = missing_items$`Rubric Title`,
-                                    'Rubric Column' = "No Submission")
-  }
-  
-  
-  #| print completion progress to console   ####
-  #durring first iteration, create progress status variables for main processing loop
-  if(i == 1)
-  {
-    iCount <- 0 #initialize loop counter for completion updates
-    pct <- 0  #initialize percentage complete tracker
-    
-  }else{
-    #print function
-    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(student_IDs), 
-                                         iCount, pct, displayText = "Missing data search: ")
-
-    #update status variables (for next iteration)
-    iCount <- updateVars$iCount
-    pct <- updateVars$pct
-
-    #print update
-    cat(updateVars$toPrint)
-  }
-
-    
-}
-
-
-
-
-# add in the missing rows with "Did Not Attempt" rating
-data_raw2_wMissing <- bind_rows(data_raw_orig, incomplete_students)
 
 
 
@@ -186,10 +118,10 @@ data_raw2_wMissing <- bind_rows(data_raw_orig, incomplete_students)
 message("\nSaving Feature vector files.\n")
 
 #write to CSV file
-write_csv(path = file.path("output", paste0("060_assessmentData_wMissing.csv")),
-          x = data_raw2_wMissing, col_names = T)
+write_csv(path = file.path("output", paste0("060v2_assessmentData_wMissing.csv")),
+          x = data_raw060v2.1, col_names = T)
 #write to RData file
-save(data_raw_orig, data_raw2_wMissing, unique_items,
-     student_IDs_complete, incomplete_students,
-     file = file.path("output", paste0("060_assessmentData_wMissing+.RData")),
+save(data_raw_orig, data_raw060v2.1, unique_items,
+     student_IDs_complete,
+     file = file.path("output", paste0("060v2_assessmentData_wMissing+.RData")),
      precheck = TRUE, compress = TRUE)

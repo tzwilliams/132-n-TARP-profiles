@@ -94,7 +94,7 @@ for (i in 1:nrow(LO_mapping)) {
 # data_raw_complete <- read_csv(#file = file.choose(),
 #                                 file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\_assessment data. 132 sp18 deID data. complete. cleaned 2019.09.12\\_132 deID data. complete. clean. 2019.09.12.csv")
 # _import BlackBoard LO data with missing rows added (from 060) ####
-load(file = file.path("output", paste0("060_assessmentData_wMissing+.RData")))
+load(file = file.path("output", paste0("060v2_assessmentData_wMissing+.RData")))
 
 
 # _import training set of Student IDs ####
@@ -129,18 +129,21 @@ load(file = file.path("output", paste0("050_studentsAndSplit.RData")))
 
 
 ######### Clean Data ##########
+# df <- as_tibble(data_raw2_wMissing)
+df <- as_tibble(data_raw060v2.1)
+
+
 # extract the numeric LO IDs
-LO_ID <- str_match(string = data_raw2_wMissing$`Rubric Row`, 
+LO_ID <- str_match(string = df$`Rubric Row`, 
                    pattern = "\\d{2}\\.\\d{2}")[,1]
 
 # (boolean) determine if the student submitted anything for the item
-item_submitted_TF <- str_detect(string = data_raw2_wMissing$`Rubric Column`, 
+item_submitted_TF <- !str_detect(string = df$`Rubric Column`, 
                                 pattern = "(No Attempt)|(Did Not Attempt)|(No Submission)")
 
 
 
 # build working dataframe and add columns for LO/CC/CO IDs and a boolean value for if the item was submitted 
-df <- as_tibble(data_raw2_wMissing)
 df <- df %>% add_column("LO_ID" = as.character(LO_ID),
                   "CC_ID" = as.character(NA),
                   "CO_ID" = as.character(NA),
@@ -174,14 +177,14 @@ for (i in 1:nrow(df)) {
 
 }
 
-data_raw3_assessment_all <- df
+data_raw100_assessment_all <- df
 
 #filter on the training data points 
-data_raw3_assessment_training <- 
-  data_raw3_assessment_all[data_raw3_assessment_all$`User ID` %in% ID_split_training$`User ID`, ] 
+data_raw100_assessment_training <- 
+  data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% ID_split_training$`User ID`, ] 
 #filter on the training data points 
-data_raw3_assessment_verification <- 
-  data_raw3_assessment_all[data_raw3_assessment_all$`User ID` %in% ID_split_verification$`User ID`, ] 
+data_raw100_assessment_verification <- 
+  data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% ID_split_verification$`User ID`, ] 
 
 
 
@@ -191,10 +194,10 @@ message("\nSaving assessment files.\n")
 
 #write to CSV file
 write_csv(path = file.path("output", paste0("100_assessmentData_complete.csv")),
-          x = data_raw3_assessment_all)
+          x = data_raw100_assessment_all)
 #write to RData file
-save(data_raw3_assessment_all, stu_sections, 
-     data_raw3_assessment_verification, data_raw3_assessment_training,
+save(data_raw100_assessment_all, stu_sections, 
+     data_raw100_assessment_verification, data_raw100_assessment_training,
      file = file.path("output", paste0("100_assessmentData.RData")),
      precheck = TRUE, compress = TRUE)
 
