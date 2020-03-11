@@ -101,11 +101,15 @@ data_raw060v2 <- data_raw_orig %>%
   mutate(assmt_item_ID = paste(`Rubric Title`, "---", `Rubric Row`))
 
 
-# add in missing rows (missing item/user pairs) and mark the assessment as "No Submission"
+# add in missing rows (missing item/user pairs) and mark the assessment as "No Submission" ####
+data_raw060v2.1 <- data_raw060v2 %>% complete(`User ID`, nesting(assmt_item_ID, `Rubric Title`,
+                                                                 `Rubric Row`, `LO Number`),
+                                                                 # `Problem Number`, `Gradebook Column`),
+                                                                 #`Rubric Type`),
+                                              fill = list(`Rubric Column` = "No Submission",
+                                                          `Points` = 0))
+#(alt, abandoned methods)
 # data_raw060v2 <- data_raw060v2 %>% expand(`User ID`, assmt_item_ID)
-data_raw060v2.1 <- data_raw060v2 %>% complete(`User ID`, assmt_item_ID, 
-                                              fill = list(`Rubric Column` = "No Submission"))
-
 # intersect(y = data_raw060v2.1, x = data_raw060v2, by = "User ID")
 
 

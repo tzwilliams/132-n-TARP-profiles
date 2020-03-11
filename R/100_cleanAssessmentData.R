@@ -60,6 +60,7 @@ rm(list=ls())
 ######### Setup ##########
 #load required packages
 require(tidyverse)
+require(lubridate)
 require(readxl)
 
 #Load funtions 
@@ -74,19 +75,6 @@ LO_mapping <- read_xlsx(#path = file.choose(),
                         col_names = T)
 LO_mapping <- as_tibble(LO_mapping)
 
-#extract and add the numeric versions of the LO, CC, and CO
-LO_mapping <- add_column(.data = LO_mapping, 
-                         "LO_ID" = NA,
-                         "CC_ID" = NA,
-                         "CO_ID" = NA)
-for (i in 1:nrow(LO_mapping)) {
-  LO_mapping$LO_ID[i]     <- str_extract(string = LO_mapping$`LO# Learning Objective`[i],
-                                    pattern = "\\d{2}\\.\\d{2}")
-  LO_mapping$CC_ID[i] <- str_extract(string = LO_mapping$LO_Map[i],
-                                    pattern = "\\d{2}\\.\\d{2}")
-  LO_mapping$CO_ID[i]     <- str_extract(string = LO_mapping$`CO# Course Goal`[i],
-                                    pattern = "CO\\d{2}")
-}
 
 
 
@@ -103,41 +91,31 @@ load(file = file.path("output", paste0("060v2_assessmentData_wMissing+.RData")))
 load(file = file.path("output", paste0("050_studentsAndSplit.RData")))
 
 
-# 
-# ######### export Student IDs to file ##########
-# #Save Student IDs to file ####
-# message("\nSaving Student IDs.\n")
-# 
-# student_IDs <- as.data.frame( unique(data_raw_assessment$`User ID`) )
-# 
-# 
-# #convert the factor version of the IDs to strings
-# student_IDs2 <- NA  #create blank temp variable
-# for(i in 1:nrow(student_IDs)) student_IDs2[i] <- toString(student_IDs[i,1])   
-# student_IDs <- as_tibble(student_IDs2)   #replace column with string values
-# rm(student_IDs2)  #clean temp variable
-# colnames(student_IDs) <- "student_id"
-# 
-# # # Rename column where names is "user_ID"
-# # names(student_IDs)[names(student_IDs) == "unique(data_raw_assessment$`User ID`)"] <- "user_ID"
-# 
-# #write to CSV file
-# write_csv(path = file.path("output", paste0("100_studentIDsUsed.csv")),
-#           x = student_IDs)
-
-
 
 
 ######### Clean Data ##########
-# df <- as_tibble(data_raw2_wMissing)
 df <- as_tibble(data_raw060v2.1)
 
+
+# .extract and add the numeric versions of the LO, CC, and CO ####
+LO_mapping <- add_column(.data = LO_mapping, 
+                         "LO_ID" = NA,
+                         "CC_ID" = NA,
+                         "CO_ID" = NA)
+for (i in 1:nrow(LO_mapping)) {
+  LO_mapping$LO_ID[i]     <- str_extract(string = LO_mapping$`LO# Learning Objective`[i],
+                                         pattern = "\\d{2}\\.\\d{2}")
+  LO_mapping$CC_ID[i] <- str_extract(string = LO_mapping$LO_Map[i],
+                                     pattern = "\\d{2}\\.\\d{2}")
+  LO_mapping$CO_ID[i]     <- str_extract(string = LO_mapping$`CO# Course Goal`[i],
+                                         pattern = "CO\\d{2}")
+}
 
 # extract the numeric LO IDs
 LO_ID <- str_match(string = df$`Rubric Row`, 
                    pattern = "\\d{2}\\.\\d{2}")[,1]
 
-# (boolean) determine if the student submitted anything for the item
+# (boolean) determine if the student submitted anything for the item, save in new column
 item_submitted_TF <- !str_detect(string = df$`Rubric Column`, 
                                 pattern = "(No Attempt)|(Did Not Attempt)|(No Submission)")
 
@@ -150,10 +128,11 @@ df <- df %>% add_column("LO_ID" = as.character(LO_ID),
                   "item_submitted_TF" = as.logical(item_submitted_TF))
 
 
-# lookup CC_ID and CO_ID from the LO_mapping data
+# .loop to lookup CC_ID and CO_ID from the LO_mapping data ####
 for (i in 1:nrow(df)) {
   # df$LO_ID[i]     <- str_extract(string = LO_mapping$`LO# Learning Objective`[i],
   #                                        pattern = "\\d{2}\\.\\d{2}")
+  # Look in the map for the CC and CO that match the LO and save to the current working data frame
   df$CC_ID[i] <- LO_mapping$CC_ID[LO_mapping$LO_ID == df$LO_ID[i]][1]
   df$CO_ID[i] <- LO_mapping$CO_ID[LO_mapping$LO_ID == df$LO_ID[i]][1]
 
@@ -177,12 +156,61 @@ for (i in 1:nrow(df)) {
 
 }
 
+##### #####
+### .for regraded items, only retain the most recent grade ####
+
+# convert all timestamp data into a more usable form using lubridate package
+df$`Attempt Date` <- dmy_hms(df$`Attempt Date`)
+df$`First Graded Date` <- dmy_hms(df$`First Graded Date`)
+df$`Last Graded Date` <- dmy_hms(df$`Last Graded Date`)
+
+#Create a place to save a backup of any duplicated items
+data_raw100_dup_items_backup <- tibble()
+
+
+
+####Search for duplicated (regraded) LO items in the raw data ####
+for (user_ID in stu_sections$`User ID`) {
+  
+  #Identify the duplicated items for this user 
+  dup   <-  duplicated(df[df$`User ID` == user_ID, ]$assmt_item_ID)
+  dup2  <-  duplicated(df[df$`User ID` == user_ID, ]$assmt_item_ID, fromLast = T)
+  duplicated_items <- (df[df$`User ID` == user_ID, ][(dup | dup2),])
+  
+  #Continue if duplicated items were identified
+  if(nrow(duplicated_items) > 1){
+    
+    #Save a backup of the duplicated items
+    data_raw100_dup_items_backup <- data_raw100_dup_items_backup %>% 
+      bind_rows(duplicated_items)
+    
+    # Identify and then retain only the most recent grade value for any re-graded items
+    for (item_ID in unique(duplicated_items$assmt_item_ID)) {
+      #isolate a single set of entries for a regraded item
+      cur_items <- duplicated_items[duplicated_items$assmt_item_ID == item_ID, ] 
+      
+      #identify the most recent entry (and only the first of any duplicates)
+      cur_items_keep <- cur_items[cur_items$`Last Graded Date` == max(cur_items$`Last Graded Date`), ][1,]
+      
+      #update the data frame
+      df <- df %>% anti_join(cur_items, ) %>%     #remove the duplicated items 
+        bind_rows(cur_items_keep)   #add back the most receint item
+      
+      print(paste(user_ID, ":", which(stu_sections$`User ID` == user_ID), "of", nrow(stu_sections), ". ", nrow(duplicated_items), "duplicates."))
+    }
+  }
+}
+
+#remove any rows that were added more than once
+data_raw100_dup_items_backup <- distinct(data_raw100_dup_items_backup)
+
+# put working data frame into a more descriptively named one
 data_raw100_assessment_all <- df
 
-#filter on the training data points 
+#extract the training data points into a separate data frame
 data_raw100_assessment_training <- 
   data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% ID_split_training$`User ID`, ] 
-#filter on the training data points 
+#extract the verification data points into a separate data frame
 data_raw100_assessment_verification <- 
   data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% ID_split_verification$`User ID`, ] 
 
@@ -196,7 +224,7 @@ message("\nSaving assessment files.\n")
 write_csv(path = file.path("output", paste0("100_assessmentData_complete.csv")),
           x = data_raw100_assessment_all)
 #write to RData file
-save(data_raw100_assessment_all, stu_sections, 
+save(data_raw100_assessment_all, stu_sections, data_raw100_dup_items_backup,
      data_raw100_assessment_verification, data_raw100_assessment_training,
      file = file.path("output", paste0("100_assessmentData.RData")),
      precheck = TRUE, compress = TRUE)
@@ -204,7 +232,7 @@ save(data_raw100_assessment_all, stu_sections,
 
 # 
 # 
-# ## comparing defined vs used LOs #### 
+# ## comparing defined vs used LOs ###
 # LOs_in_map <- as.tibble(sort(unique(LO_mapping$LO_ID)))
 # LOs_in_assessment <- as.tibble(sort(unique(df$LO_ID)))
 # 

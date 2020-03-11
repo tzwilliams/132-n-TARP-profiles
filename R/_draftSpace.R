@@ -10,24 +10,27 @@ StatSummary <- function(sumList) {
 
 require(tidyverse)
 require(readxl)
-data_usingTableau <- read_csv(#file = file.choose(),
-  file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\132 data with missing rows added (2020.03.04 in Tableau).csv")
+# data_usingTableau <- read_csv(#file = file.choose(),
+  # file = "C:\\Users\\Taylor Williams\\Dropbox (Personal)\\_Purdue (DB)\\__Milestones\\3_Dissertation (TW DB)\\132 data + info\\_2 cleaned data\\132 data with missing rows added (2020.03.04 in Tableau).csv")
 
+
+# load(file.path("output", paste0("110v2_stuFeatureVector-CO_ID_grouping.RData")))
+load(file.path("output", paste0("100_assessmentData.RData")))
 
 #### working from 110-v2 #####
 # users from gradebook
 stuList_gradebook <- tibble("User ID" = stu_sections$`User ID`)
 
-# data <- data_raw060v2.1
-data <- data_usingTableau
+data <- data_raw100_assessment_all
+# data <- data_usingTableau
 
 # count the number of recorded assessments for each user in the data (should match `unique_items`)
 stuList_BB <- data %>% group_by(`User ID`) %>% summarise(n())
 stuList_orig <- data_raw_orig %>% group_by(`User ID`) %>% summarise(n())
 
 # students who have recorded assmts but aren't (or are) in gradebook
-stu_withdrawals <- anti_join(x = stuList_BB, y = stuList_gradebook, by = "User ID")
-stu_completers  <- semi_join(x = stuList_BB, y = stuList_gradebook, by = "User ID")
+stu_withdrawals <- anti_join(x = stuList_BB, y = stuList_orig, by = "User ID")
+stu_completers  <- semi_join(x = stuList_BB, y = stuList_orig, by = "User ID")
 
 # std dev and mean number of LOAs in data and subgroups
 
@@ -55,12 +58,7 @@ cnt_LOAssmts$assmt_item_ID[32]
 
 
 
-####Searching for which LO items are duplicated in the raw data ####
-dup <- duplicated(data_raw060v2.1[data_raw060v2.1$`User ID`=="engr132_Sp18Stu_115147", ]$assmt_item_ID)
-dup2 <- duplicated(data_raw060v2.1[data_raw060v2.1$`User ID`=="engr132_Sp18Stu_115147", ]$assmt_item_ID, fromLast = T)
-x <- (data_raw060v2.1[data_raw060v2.1$`User ID`=="engr132_Sp18Stu_115147", ][(dup | dup2),])
 
 
-require(lubridate)
 
 

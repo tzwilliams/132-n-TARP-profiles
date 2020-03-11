@@ -49,7 +49,7 @@ rm(list=ls())
 
 ######### Setup ##########
 #set run constants
-DEV_MODE_DEFAULTS_TOGGLE <- TRUE  #set true to use defaults (skip user options)
+DEV_MODE_DEFAULTS_TOGGLE <- F  #set true to use defaults (skip user options)
 
 #load required packages
 require(tidyverse)
@@ -232,6 +232,7 @@ for (i in 1:length(FV_names)) {
   stu_LO_FV <- stu_LO_FV %>% add_column(!!FV_names[i] := 0)
 }
 
+
 # drop 'pct submitted' from the list of FV names
 prof_FVs <- !str_detect(string = FV_names,
                         pattern = "pct submitted$")
@@ -239,71 +240,8 @@ FV_names_prof <- FV_names[prof_FVs]
 
 
 
-#
-# #### .calculate average LO proficiency ####
-# # ..v1. straight assessment levels ####
-# # For each student subset the LOs and calculate average LO proficiency level
-# for (j in 1:nrow(stu_sections)) {
-#   cur_stu <- as.character(stu_sections[j, 1])
-#   cur_stu_row <- stu_LO_FV[,1] == cur_stu
-#   cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
-#
-#   # loop through all the levels of the selected LO grouping
-#   for (LO in LO_subset){
-#     cur_assessments <- cur_stu_LOs[cur_stu_LOs[[LO_lvl]] == LO, "Rubric Column"]
-#     # LO_value_sum <- 0.0
-#
-#     # loop through all the _____
-#     if(nrow(cur_assessments) > 0){
-#
-#       # loop through the recorded proficencies for the current LO
-#       for (i in 1:length(cur_assessments$`Rubric Column`)){
-#         level <- cur_assessments$`Rubric Column`[[i]]
-#
-#         # LO_value_sum <- LO_value_sum +
-#         #   proficiency_levels[proficiency_levels$rubric_column == level, "value"]
-#
-#         # convert proficency level into the column name format for this specific LO
-#         cur_colName <- paste0(LO, " - ",
-#                               proficiency_levels$label[proficiency_levels$rubric_column == level])
-#
-#         # increment the count for this LO's profiency level
-#         stu_LO_FV[cur_stu_row, cur_colName] <- (stu_LO_FV[cur_stu_row, cur_colName] + 1)
-#       }
-#
-#
-#       # calc probability for these LOs
-#       stu_LO_FV[,2:length(stu_LO_FV)][cur_stu_row, str_detect(string = FV_names, pattern = paste0("^", LO))] <-
-#         stu_LO_FV[,2:length(stu_LO_FV)][cur_stu_row, str_detect(string = FV_names, pattern = paste0("^", LO))]/i
-#     } # end IF
-#   } # end LO FOR
-#
-# } # end stu FOR
-#
-#
-# ######### Save data to file #########
-# ##Save assessment data to file ####
-# message("\nSaving feature vector files.\n")
-#
-# #write to CSV file
-# write_csv(path = file.path("output", paste0("110_stuFeatureVector_straight-", LO_lvl ,"_grouping.csv")),
-#           x = stu_LO_FV, col_names = T)
-# #write to RData file
-# save(stu_LO_FV, LO_lvl,
-#      file = file.path("output", paste0("110_stuFeatureVector_straight-", LO_lvl ,"_grouping.RData")),
-#      precheck = TRUE, compress = TRUE)
-#
-
-
-
 
 # ..v2. With constructed missing assessment percentage  ####
-####  #### VERY INCOMPLETE!!! ####  ####
-####
-####
-# calculate missing submission percentage
-
-
 
 # create place to store the missing assessment items
 missing_cnt <- tibble('User ID' = as.character(),
@@ -317,16 +255,16 @@ for (i in 1:nrow(stu_sections)) {
   # extract the cur_stu's LO data
   cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
 
-  # identify the number of items the cur_stu was missing
+  # identify the total number of items the cur_stu is missing
   cur_missing_cnt <- sum(cur_stu_LOs$`Rubric Column` == "Did Not Attempt", na.rm = T) +
     sum(cur_stu_LOs$`Rubric Column` == "No Attempt", na.rm = T) +
     sum(cur_stu_LOs$`Rubric Column` == "No Submission", na.rm = T)
   # cur_missing_cnt <- sum(!cur_stu_LOs$item_submitted_TF) # alt equiv option
 
-  # calculate missing submission percentage
+  # calculate total missing submission percentage
   pct_submitted <- (nrow(cur_stu_LOs) - cur_missing_cnt)/nrow(cur_stu_LOs)
   
-  # add the student and their missing LO items to missing_cnt
+  # add the student and their total missing LO items to missing_cnt
   missing_cnt <- missing_cnt %>% add_case('User ID' = cur_stu,
                                           'Missing item count' = cur_missing_cnt,
                                           'Percent submitted' = pct_submitted)
@@ -341,12 +279,13 @@ for (i in 1:nrow(stu_sections)) {
       # LO_value_sum <- 0.0
       if(nrow(cur_assessments) > 0){
 
-        ### missing submission percentage
+        ### find missing submission percentage for LO-groups
           # extract the cur_stu's LO data
           cur_stu_LO_subset <- cur_stu_LOs[cur_stu_LOs$CO_ID == LO, ]
           
           # identify the number of items the cur_stu was missing
-          cur_missing_cnt <- sum(cur_stu_LO_subset$`Rubric Column` == "Did Not Attempt", na.rm = T) +
+          cur_missing_cnt <- 
+            sum(cur_stu_LO_subset$`Rubric Column` == "Did Not Attempt", na.rm = T) +
             sum(cur_stu_LO_subset$`Rubric Column` == "No Attempt", na.rm = T) +
             sum(cur_stu_LO_subset$`Rubric Column` == "No Submission", na.rm = T)
           # cur_missing_cnt <- sum(!cur_stu_LOs$item_submitted_TF) # alt equiv option
@@ -361,8 +300,8 @@ for (i in 1:nrow(stu_sections)) {
         
         
         ### loop through the recorded proficencies for the current LO
-        for (i in 1:length(cur_assessments$`Rubric Column`)){
-          level <- cur_assessments$`Rubric Column`[[i]]
+        for (j in 1:length(cur_assessments$`Rubric Column`)){
+          level <- cur_assessments$`Rubric Column`[[j]]
 
           # LO_value_sum <- LO_value_sum +
           #   proficiency_levels[proficiency_levels$rubric_column == level, "value"]
@@ -388,7 +327,6 @@ for (i in 1:nrow(stu_sections)) {
     } # end LO FOR
 
 
-
   #| print completion progress to console   ####
   #durring first iteration, create progress status variables for main processing loop
   if(i == 1)
@@ -399,7 +337,7 @@ for (i in 1:nrow(stu_sections)) {
   }else{
     #print function
     updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(stu_sections),
-                                         iCount, pct, displayText = "Missing data count: ")
+                                         iCount, pct, displayText = "Feature vector completion: ")
 
     #update status variables (for next iteration)
     iCount <- updateVars$iCount
@@ -413,11 +351,6 @@ for (i in 1:nrow(stu_sections)) {
 }
 
 
-####
-####
-####  #### VERY INCOMPLETE!!! ####  ####
-
-
 
 
 ######### Save data to file #########
@@ -425,9 +358,9 @@ for (i in 1:nrow(stu_sections)) {
 message("\nSaving Feature vector files.\n")
 
 #write to CSV file
-write_csv(path = file.path("output", paste0("110_stuFeatureVector-", LO_lvl ,"_grouping.csv")),
+write_csv(path = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"_grouping.csv")),
           x = stu_LO_FV, col_names = T)
 #write to RData file
 save(stu_LO_FV, LO_lvl,
-     file = file.path("output", paste0("110_stuFeatureVector-", LO_lvl ,"_grouping.RData")),
+     file = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"_grouping.RData")),
      precheck = TRUE, compress = TRUE)
