@@ -47,9 +47,16 @@ rm(list=ls())
 
 
 
+######### Read Data ##########
+load(file.path("output", paste0("100_assessmentData.RData")))
+
+
+
 ######### Setup ##########
 #set run constants
-DEV_MODE_DEFAULTS_TOGGLE <- F  #set true to use defaults (skip user options)
+DEV_MODE_DEFAULTS_TOGGLE <- T  #set true to use defaults (skip user options)
+USER_IDS <- stu_sections$`User ID`[stu_sections$training_set==T]
+
 
 #load required packages
 require(tidyverse)
@@ -61,10 +68,6 @@ source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
 
 
 
-######### Read Data ##########
-load(file.path("output", paste0("100_assessmentData.RData")))
-
-
 
 
 
@@ -73,16 +76,29 @@ load(file.path("output", paste0("100_assessmentData.RData")))
 ## dev mode option to skip user option selection durint initial development and testing
 
 if(DEV_MODE_DEFAULTS_TOGGLE){
-  # no CO filtering
-  df_subset <- data_raw100_assessment_training
+  # # no CO filtering
+  # df_subset <- data_raw100_assessment_training
+  
+  # CO01 filtering
+  LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO01"
+  df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+  
   LO_subset <- sort(unique(df_subset$LO_ID))
   
-  # CO grouping level
-  LO_lvl <- 'CO_ID'
-  LO_subset <- sort(unique(df_subset$CO_ID))
+  
+  
+  # # CO grouping level
+  # LO_lvl <- 'CO_ID'
+  # LO_subset <- sort(unique(df_subset$CO_ID))
+  
+  # CC grouping level
+  LO_lvl <- 'CC_ID'
+  LO_subset <- sort(unique(df_subset$CC_ID))
+  
   
   # minimum number of observations
   userSelection_minObs <- 1
+  
 }else{
   
   # # filter on the 01.xx LOs
@@ -225,18 +241,22 @@ for (LO in LO_subset) {
 
 
 # construct student FV table
-stu_LO_FV <- tibble("User ID" = stu_sections$`User ID`)
+stu_LO_FV <- tibble("User ID" = USER_IDS)
 
 # append feature vector names to the main table (init. values to 0)
 for (i in 1:length(FV_names)) {
   stu_LO_FV <- stu_LO_FV %>% add_column(!!FV_names[i] := 0)
 }
-
+rm(i)
 
 # drop 'pct submitted' from the list of FV names
 prof_FVs <- !str_detect(string = FV_names,
                         pattern = "pct submitted$")
 FV_names_prof <- FV_names[prof_FVs]
+# save location of 'pct submitted' columns
+pct_FVs <- str_detect(string = FV_names,
+                      pattern = "pct submitted$")
+
 
 
 
@@ -248,9 +268,9 @@ missing_cnt <- tibble('User ID' = as.character(),
                       'Missing item count' = as.integer(),
                       'Percent submitted' = as.numeric())
 
-for (i in 1:nrow(stu_sections)) {
-  cur_stu <- as.character(stu_sections[i, 'User ID']) #store the current student ID
-  cur_stu_row <- stu_LO_FV[,1] == cur_stu
+for (i in 1:length(USER_IDS)) {
+  cur_stu <- USER_IDS[i]  #store the current student ID
+  cur_stu_row <- (stu_LO_FV[,1] == cur_stu)
 
   # extract the cur_stu's LO data
   cur_stu_LOs <- df_subset[df_subset$"User ID" == cur_stu, ]
@@ -281,8 +301,16 @@ for (i in 1:nrow(stu_sections)) {
 
         ### find missing submission percentage for LO-groups
           # extract the cur_stu's LO data
+        if (LO_lvl == "CO_ID") {
           cur_stu_LO_subset <- cur_stu_LOs[cur_stu_LOs$CO_ID == LO, ]
-          
+        }else if (LO_lvl == "CC_ID") {
+          cur_stu_LO_subset <- cur_stu_LOs[cur_stu_LOs$CC_ID == LO, ]
+        }else if (LO_lvl == "LO_ID") {
+          cur_stu_LO_subset <- cur_stu_LOs[cur_stu_LOs$LO_ID == LO, ]
+        }else{
+          return()
+        }
+        
           # identify the number of items the cur_stu was missing
           cur_missing_cnt <- 
             sum(cur_stu_LO_subset$`Rubric Column` == "Did Not Attempt", na.rm = T) +
@@ -290,7 +318,7 @@ for (i in 1:nrow(stu_sections)) {
             sum(cur_stu_LO_subset$`Rubric Column` == "No Submission", na.rm = T)
           # cur_missing_cnt <- sum(!cur_stu_LOs$item_submitted_TF) # alt equiv option
           
-          # calculate missing submission percentage
+          # calculate submitted percentage
           pct_submitted <- (nrow(cur_stu_LO_subset) - cur_missing_cnt)/nrow(cur_stu_LO_subset)
           
           # save missing submission percentage into FV
@@ -322,7 +350,7 @@ for (i in 1:nrow(stu_sections)) {
         cur_dims <- str_detect(string = FV_names_prof, pattern = paste0("^", LO))
           #take the FV without the ID col, then extract only the dims with one of the 4 proficiency levels, then only extract the four specific values for the current student and LO proficiency levels. Divide the result by the number of assessments
         stu_LO_FV[,-1][prof_FVs][cur_stu_row, cur_dims] <-
-          stu_LO_FV[,-1][prof_FVs][cur_stu_row, cur_dims]/i
+          stu_LO_FV[,-1][prof_FVs][cur_stu_row, cur_dims]/nrow(cur_assessments)
       } # end IF
     } # end LO FOR
 
@@ -336,7 +364,7 @@ for (i in 1:nrow(stu_sections)) {
 
   }else{
     #print function
-    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(stu_sections),
+    updateVars <- DisplayPercentComplete(dataFrame = as.data.frame(USER_IDS),
                                          iCount, pct, displayText = "Feature vector completion: ")
 
     #update status variables (for next iteration)
@@ -351,16 +379,33 @@ for (i in 1:nrow(stu_sections)) {
 }
 
 
+######## find and drop students who have zero assessments for one or more LO grouping levels ####
+
+# examine the percent submitted columns only (include the user id column)
+z <- data.table::as.data.table(stu_LO_FV[, c(TRUE, pct_FVs)])
+
+# Find the student IDs for those students who are missing all assessments for one or more LO groupings
+stu_to_drop <- z[ z[, do.call(pmin, .SD) == 0, .SDcols=names(stu_LO_FV[, c(TRUE, pct_FVs)])] ][, 1]
+stu_to_drop <- as.tibble(stu_to_drop)
+
+# save the rows associated with the students to drop
+stu_LO_FV.dropped_IDs <- stu_LO_FV[stu_LO_FV$`User ID` %in%  stu_to_drop$`User ID`, ]
+# filter out the rows associated with the students to drop
+stu_LO_FV <- stu_LO_FV[!(stu_LO_FV$`User ID` %in%  stu_to_drop$`User ID`), ]
+
+
+
 
 
 ######### Save data to file #########
-##Save assessment data to file ####
+##Save feature vector to file ####
 message("\nSaving Feature vector files.\n")
+inc_COs <- unique(df_subset$CO_ID) %>% str_sort() %>% str_c(collapse = " ")  # string of COs included in data used
 
 #write to CSV file
-write_csv(path = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"_grouping.csv")),
+write_csv(path = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"_grouping-", inc_COs, ".csv")),
           x = stu_LO_FV, col_names = T)
 #write to RData file
-save(stu_LO_FV, LO_lvl,
-     file = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"_grouping.RData")),
+save(stu_LO_FV, LO_lvl, stu_LO_FV.dropped_IDs,
+     file = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"_grouping-", inc_COs, ".RData")),
      precheck = TRUE, compress = TRUE)

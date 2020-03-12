@@ -60,5 +60,20 @@ cnt_LOAssmts$assmt_item_ID[32]
 
 
 
+t <- stu_sections$`User ID`[stu_sections$training_set==T]
+f <- stu_sections$`User ID`[stu_sections$training_set==F]
+
+length(t)
+sum(t %in% unique(data_raw100_assessment_all$`User ID`))
+sum(t %in% unique(data_raw100_assessment_training$`User ID`))
+sum(t %in% unique(data_raw100_assessment_verification$`User ID`))
+
+length(f)
+sum(f %in% unique(data_raw100_assessment_all$`User ID`))
+sum(f %in% unique(data_raw100_assessment_training$`User ID`))
+sum(f %in% unique(data_raw100_assessment_verification$`User ID`))
+
+
+
 
 

@@ -196,7 +196,7 @@ for (user_ID in stu_sections$`User ID`) {
       df <- df %>% anti_join(cur_items, ) %>%     #remove the duplicated items 
         bind_rows(cur_items_keep)   #add back the most receint item
       
-      print(paste(user_ID, ":", which(stu_sections$`User ID` == user_ID), "of", nrow(stu_sections), ". ", nrow(duplicated_items), "duplicates."))
+      print(paste0(user_ID, ": ", which(stu_sections$`User ID` == user_ID), " of ", nrow(stu_sections), ". ", nrow(duplicated_items), " duplicates."))
     }
   }
 }
@@ -209,10 +209,12 @@ data_raw100_assessment_all <- df
 
 #extract the training data points into a separate data frame
 data_raw100_assessment_training <- 
-  data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% ID_split_training$`User ID`, ] 
+  data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% 
+                               stu_sections$`User ID`[stu_sections$training_set==T], ] 
 #extract the verification data points into a separate data frame
 data_raw100_assessment_verification <- 
-  data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% ID_split_verification$`User ID`, ] 
+  data_raw100_assessment_all[data_raw100_assessment_all$`User ID` %in% 
+                               stu_sections$`User ID`[stu_sections$training_set==F], ] 
 
 
 
