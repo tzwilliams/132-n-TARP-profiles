@@ -54,7 +54,7 @@ load(file.path("output", paste0("100_assessmentData.RData")))
 
 ######### Setup ##########
 #set run constants
-DEV_MODE_DEFAULTS_TOGGLE <- T  #set true to use defaults (skip user options)
+DEV_MODE_DEFAULTS_TOGGLE <- F  #set true to use defaults (skip user options)
 USER_IDS <- stu_sections$`User ID`[stu_sections$training_set==T]
 
 
@@ -76,24 +76,24 @@ source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
 ## dev mode option to skip user option selection durint initial development and testing
 
 if(DEV_MODE_DEFAULTS_TOGGLE){
-  # # no CO filtering
-  # df_subset <- data_raw100_assessment_training
+  # no CO filtering
+  df_subset <- data_raw100_assessment_training
   
   # CO01 filtering
-  LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO01"
-  df_subset <- data_raw100_assessment_training[LO_ID_range, ]
-  
+  # LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO01"
+  # df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+
   LO_subset <- sort(unique(df_subset$LO_ID))
   
   
   
-  # # CO grouping level
-  # LO_lvl <- 'CO_ID'
-  # LO_subset <- sort(unique(df_subset$CO_ID))
+  # CO grouping level
+  LO_lvl <- 'CO_ID'
+  LO_subset <- sort(unique(df_subset$CO_ID))
   
-  # CC grouping level
-  LO_lvl <- 'CC_ID'
-  LO_subset <- sort(unique(df_subset$CC_ID))
+  # # CC grouping level
+  # LO_lvl <- 'CC_ID'
+  # LO_subset <- sort(unique(df_subset$CC_ID))
   
   
   # minimum number of observations

@@ -37,103 +37,102 @@ require(tidyverse)
 require(readxl)
 
 #Load funtions 
-source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
+source(file.path(getwd(), "R", "functions", "DisplayPercentComplete.R"))
+source(file.path(getwd(), "R", "functions", "file-structure-functions.R"))
 
 
 ######### Read Data ##########
+if(!exists("filenamePrefix")) filenamePrefix <- NULL
+if(!exists("dataFolderPath")) dataFolderPath <- NULL
+if(!exists("filenameFV")) filenameFV <- NULL
+
+## get data file locations from user ####
+#Locate the CLEAN probability matrix (feature vector) file
+  filenameFV <- 
+    SelectFile(prompt = "*****Select the CLEAN PROBABILITY MATRIX (feature vector) file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
+             defaultFilename = "110v2_stuFeatureVector-",
+             # filenamePrefix = ifelse(exists("filenamePrefix") & !is.null(filenamePrefix),
+             #                         yes = filenamePrefix, no = ""),
+             fileTypeMatrix = matrix(c("RData", ".RData", "CSV", ".csv", "All files", ".*"),
+                                     3, 2, byrow = TRUE),
+             dataFolderPath = ifelse(exists("dataFolderPath") & !is.null(dataFolderPath),
+                                     yes = dataFolderPath, no = ""))
+  
 
 
-##Read file with W values for projection vectors
-#read the MIN_W and THRESHOLD data file
-prompt <- "*****Select the MIN_W and THRESHOLD data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
-cat("\n", prompt, "\n\n")
-filename <- tcltk::tk_choose.files(caption = prompt,
-                                   default = file.path(getwd(),
-                                                       "output",
-                                                       "40_minW_and_threshold.RData"),
-                                   filter = matrix(c("RData", ".RData",
-                                                     "CSV", ".csv",
-                                                     "All files", ".*"),
-                                                   3, 2, byrow = TRUE),
-                                   multi = FALSE)
 #load in the data based on the type of data file provided
-if(grepl(x = filename, pattern = "\\.RData$"))
-{
-  load(file = filename)
-
-}else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
-{
-  minW_RandVec_sort <- read_csv(file = filename)
-
-}else
-{
+if(grepl(x = filenameFV, pattern = "\\.RData$")){
+  objs <- load(file = filenameFV, verbose = T)
+  probMatrix <- stu_LO_FV
+  probMatrix <- rownames_to_column(probMatrix)
+  names(probMatrix)[1] <- "userID"
+}else if(grepl(x = filenameFV, pattern = "\\.(csv|CSV)$")){
+  probMatrix <- read_csv(file = filenameFV)
+  names(probMatrix)[1] <- "userID"
+}else {
   message("Invalid Data Filetype.")
-  return
+  break
 }
+
+
+
+
+#read the MIN_W and THRESHOLD data file
+filenameMinW <-
+  SelectFile(prompt = "*****Select the MIN_W and THRESHOLD data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
+             defaultFilename = "40_minW_and_threshold.RData",
+             # filenamePrefix = ifelse(exists("filenamePrefix") & !is.null(filenamePrefix),
+             #                         yes = filenamePrefix, no = ""),
+             fileTypeMatrix = matrix(c("RData", ".RData", "CSV", ".csv", "All files", ".*"),
+                                     3, 2, byrow = TRUE),
+             dataFolderPath = ifelse(exists("dataFolderPath") & !is.null(dataFolderPath),
+                                     yes = dataFolderPath, no = ""))
+
+
+#load in the data based on the type of data file provided
+if(grepl(x = filenameMinW, pattern = "\\.RData$")){
+  load(file = filenameMinW)
+}else if(grepl(x = filenameMinW, pattern = "\\.(csv|CSV)$")){
+  minW_RandVec_sort <- read_csv(file = filenameMinW)
+}else{
+  message("Invalid Data Filetype.")
+  break
+}
+
 
 
 
 #read the PROJECTIONS data file
-prompt <- "*****Select the PROJECTIONS data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
-cat("\n", prompt, "\n\n")
-filename <- tcltk::tk_choose.files(caption = prompt,
-                                   default = file.path(getwd(),
-                                                       "output",
-                                                       "30_projections.RData"),
-                                   filter = matrix(c("RData", ".RData",
-                                                     "CSV", ".csv",
-                                                     "All files", ".*"),
-                                                   3, 2, byrow = TRUE),
-                                   multi = FALSE)
+filenameProj <-
+  SelectFile(prompt = "*****Select the PROJECTIONS data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
+             defaultFilename = "30_projections.RData",
+             # filenamePrefix = ifelse(exists("filenamePrefix") & !is.null(filenamePrefix),
+             #                         yes = filenamePrefix, no = ""),
+             fileTypeMatrix = matrix(c("RData", ".RData", "CSV", ".csv", "All files", ".*"),
+                                     3, 2, byrow = TRUE),
+             dataFolderPath = ifelse(exists("dataFolderPath") & !is.null(dataFolderPath),
+                                     yes = dataFolderPath, no = ""))
+
+
 #load in the data based on the type of data file provided
-if(grepl(x = filename, pattern = "\\.RData$"))
-{
-  load(file = filename)
+if(grepl(x = filenameProj, pattern = "\\.RData$")){
+  load(file = filenameProj)
   projection_values <- projection
   projection_values <- rownames_to_column(projection_values)
   names(projection_values)[1] <- "userID"
-  
-}else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
-{
-  projection_values <- read_csv(file = filename)
+}else if(grepl(x = filenameProj, pattern = "\\.(csv|CSV)$")){
+  projection_values <- read_csv(file = filenameProj)
   names(projection_values)[1] <- "userID"
-  
-}else
-{
-  message("Invalid Data Filetype.")
-  return
-}
-
-#read the CLEAN probability matrix CSV file
-prompt <- "*****Select the CLEAN PROBABILITY MATRIX file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n"
-cat("\n", prompt)
-filename <- tcltk::tk_choose.files(caption = prompt,
-                                   default = file.path(getwd(),
-                                                       "output",
-                                                       "10_passForwardData_CPM.RData"),
-                                   filter = matrix(c("RData", ".RData",
-                                                     "CSV", ".csv",
-                                                     "All files", ".*"),
-                                                   3, 2, byrow = TRUE),
-                                   multi = FALSE)
-#load in the data based on the type of data file provided
-if(grepl(x = filename, pattern = "\\.RData$"))
-{
-  objs <- load(file = filename, verbose = T)
-  probMatrix <- stu_LO_FV
-  probMatrix <- rownames_to_column(probMatrix)
-  names(probMatrix)[1] <- "userID"
-  
-}else if(grepl(x = filename, pattern = "\\.(csv|CSV)$"))
-{
-  probMatrix <- read_csv(file = filename)
-  names(probMatrix)[1] <- "userID"
-  
-}else
-{
+}else{
   message("Invalid Data Filetype.")
   break
 }
+
+
+
+
+
+
 
 ##Number of students in course. Required for calculating percentage of students in profiles
 n_learners <- length(probMatrix$userID)
