@@ -49,7 +49,7 @@ if(!exists("filenameFV")) filenameFV <- NULL
 ## get data file locations from user ####
 #Locate the CLEAN probability matrix (feature vector) file
   filenameFV <- 
-    SelectFile(prompt = "*****Select the CLEAN PROBABILITY MATRIX (feature vector) file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
+    SelectFile(prompt = "*****Select the CLEAN PROBABILITY MATRIX (feature vector) file (probably a `110_`)*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
              defaultFilename = "110v2_stuFeatureVector-",
              # filenamePrefix = ifelse(exists("filenamePrefix") & !is.null(filenamePrefix),
              #                         yes = filenamePrefix, no = ""),
@@ -64,11 +64,11 @@ if(!exists("filenameFV")) filenameFV <- NULL
 if(grepl(x = filenameFV, pattern = "\\.RData$")){
   objs <- load(file = filenameFV, verbose = T)
   probMatrix <- stu_LO_FV
-  probMatrix <- rownames_to_column(probMatrix)
-  names(probMatrix)[1] <- "userID"
+  # probMatrix <- rownames_to_column(probMatrix)
+  # names(probMatrix)[1] <- "User ID"
 }else if(grepl(x = filenameFV, pattern = "\\.(csv|CSV)$")){
   probMatrix <- read_csv(file = filenameFV)
-  names(probMatrix)[1] <- "userID"
+  names(probMatrix)[1] <- "User ID"
 }else {
   message("Invalid Data Filetype.")
   break
@@ -79,7 +79,7 @@ if(grepl(x = filenameFV, pattern = "\\.RData$")){
 
 #read the MIN_W and THRESHOLD data file
 filenameMinW <-
-  SelectFile(prompt = "*****Select the MIN_W and THRESHOLD data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
+  SelectFile(prompt = "*****Select the MIN_W and THRESHOLD data file (probably a `40_`)*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
              defaultFilename = "40_minW_and_threshold.RData",
              # filenamePrefix = ifelse(exists("filenamePrefix") & !is.null(filenamePrefix),
              #                         yes = filenamePrefix, no = ""),
@@ -104,7 +104,7 @@ if(grepl(x = filenameMinW, pattern = "\\.RData$")){
 
 #read the PROJECTIONS data file
 filenameProj <-
-  SelectFile(prompt = "*****Select the PROJECTIONS data file*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
+  SelectFile(prompt = "*****Select the PROJECTIONS data file (probably a `30_`)*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
              defaultFilename = "30_projections.RData",
              # filenamePrefix = ifelse(exists("filenamePrefix") & !is.null(filenamePrefix),
              #                         yes = filenamePrefix, no = ""),
@@ -119,10 +119,11 @@ if(grepl(x = filenameProj, pattern = "\\.RData$")){
   load(file = filenameProj)
   projection_values <- projection
   projection_values <- rownames_to_column(projection_values)
-  names(projection_values)[1] <- "userID"
-}else if(grepl(x = filenameProj, pattern = "\\.(csv|CSV)$")){
-  projection_values <- read_csv(file = filenameProj)
-  names(projection_values)[1] <- "userID"
+  names(projection_values)[1] <- "User ID"
+  rm(projection)
+# }else if(grepl(x = filenameProj, pattern = "\\.(csv|CSV)$")){
+#   projection_values <- read_csv(file = filenameProj)
+#   names(projection_values)[1] <- "User ID"
 }else{
   message("Invalid Data Filetype.")
   break
@@ -135,7 +136,7 @@ if(grepl(x = filenameProj, pattern = "\\.RData$")){
 
 
 ##Number of students in course. Required for calculating percentage of students in profiles
-n_learners <- length(probMatrix$userID)
+n_learners <- length(probMatrix$`User ID`)
 
 ##Take the number of best vectors to consider for profiling
 n_vectors <- readline(prompt = "Please enter the number of best projection vectors to consider for profiling : \n")
@@ -164,7 +165,7 @@ for(i in 1:n_vectors)
 ##Name columns and rows using names of corresponding vectors
 proj_vals_for_criteria <- as.data.frame(proj_vals_for_criteria)
 colnames(proj_vals_for_criteria) <- best_vector_names
-rownames(proj_vals_for_criteria) <- probMatrix$userID
+rownames(proj_vals_for_criteria) <- probMatrix$`User ID`
 
 ##Form a list of W values for best projection vectors
 best_vector_thresholds <- minW_RandVec_sort[1:n_vectors, "Group Threshold"]
@@ -199,7 +200,7 @@ for(i in 1:n_learners)  #loop over all users
 
 ##Convert cluster_assignment to dataFrame, name rows with corresponding user_id and columns with corresponding vector
 cluster_assignments <- as.data.frame(cluster_assignments)
-rownames(cluster_assignments) <- probMatrix$userID
+rownames(cluster_assignments) <- probMatrix$`User ID`
 colnames(cluster_assignments) <- paste0("cluster_", best_vector_names)
 
 
@@ -207,8 +208,8 @@ colnames(cluster_assignments) <- paste0("cluster_", best_vector_names)
 
 ##Initialize a dataFrame for saving the profiles of every user
 all_assignments <- c()
-all_assignments$user_id <- rownames(cluster_assignments)
-all_assignments$profile <- rep(NA, length(all_assignments$user_id))
+all_assignments$`User ID` <- rownames(cluster_assignments)
+all_assignments$profile <- rep(NA, length(all_assignments$`User ID`))
 
 ##Convert cluster assignments to strings of length = n_vectors. These strings are usage profiles
 cluster_assignments_collapsed <- c()
@@ -220,6 +221,7 @@ for(i in 1:nrow(cluster_assignments))
 ##Convert all_assignments to dataFrame
 all_assignments <- as.data.frame(all_assignments)
 all_assignments$profile <- cluster_assignments_collapsed
+cluster_assignments_collapsed <- all_assignments
 
 ##Find set of all profiles observed in course
 unique_assignments <- unique(all_assignments$profile)
@@ -252,17 +254,17 @@ message("\nSaving files.\n")
 
 #write to CSV file
 ##Save dataFrame of profiles and percentage students in each profile
-write.csv(file = file.path("output", paste0("300_profileDistribution-", n_vectors ,"_criteria.csv")), 
-          x = unique_assignment_counts, row.names = F) 
+write.csv(file = file.path("output", paste0("300_profileDistribution-", n_vectors ,"_criteria.csv")),
+          x = unique_assignment_counts, row.names = F)
 
 ##Save dataFrame of cluster assignments of individual users
-write.csv(file = file.path("output", paste0("300_clusterAssignmentsAllUsers-", n_vectors ,"_criteria.csv")), 
-          x = cluster_assignments, row.names = T) 
-write.csv(file = file.path("output", paste0("300_clusterAssignmentsAllUsersCollapsed-", n_vectors ,"_criteria.csv")), 
-          x = all_assignments, row.names = F) 
+write.csv(file = file.path("output", paste0("300_clusterAssignmentsAllUsers-", n_vectors ,"_criteria.csv")),
+          x = cluster_assignments, row.names = T)
+write.csv(file = file.path("output", paste0("300_clusterAssignmentsAllUsersCollapsed-", n_vectors ,"_criteria.csv")),
+          x = cluster_assignments_collapsed, row.names = F)
 
 #write to RData file
-save(unique_assignment_counts, cluster_assignments, cluster_assignments_collapsed,
+save(unique_assignment_counts, cluster_assignments, all_assignments,
      file = file.path("output", paste0("300_profiles-", n_vectors ,"_criteria.RData")),
      precheck = TRUE, compress = TRUE)
 
