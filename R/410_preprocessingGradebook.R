@@ -10,7 +10,7 @@
 # 
 # Description:  The gradebook data is in a very customized and nonstandard format in an Excel file. This script pulls all of the gradebook data together and cleans it, focusing on midterm and final grades.
 # 
-# Package dependancies: 
+# Package dependencies: 
 # 
 # Input stack: 
 #     Gradebook (raw, original)       
@@ -26,8 +26,8 @@
 # Changelog:
 #     
 #                   
-# Feature wishlist:  (*: planned but not complete)
-#     *
+# Feature wish list:  (*: planned but not complete)
+#     *2021.03.30.  I would like to pull the reflection data out of this workbook.  The entries seem to be in columns FI - FW
 ## ===================================================== ##
 
 
@@ -46,7 +46,7 @@ rm(list=ls())
 require(tidyverse)
 require(readxl)
 
-#Load funtions 
+#Load functions 
 source(file.path(getwd(), "R", "functions", "DisplayPercentComplete.R"))
 source(file.path(getwd(), "R", "functions", "file-structure-functions.R"))
 
@@ -56,7 +56,7 @@ if(!exists("dataFolderPath")) dataFolderPath <- NULL
 if(!exists("filenameGB")) filenameGB <- NULL
 
 ## get data file locations from user ####
-#Locate the CLEAN probability matrix (feature vector) file
+#Locate the CLEAN gradebook file
 filenameGB <- 
   SelectFile(prompt = "*****Select the CLEANED GRADEBOOK file (Excel)*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
              defaultFilename = "ENGR132_Sp18_SemesterGrades_v5_deID",

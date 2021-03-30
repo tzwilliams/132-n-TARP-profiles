@@ -164,7 +164,7 @@ SelectFile <- function(prompt = NULL, defaultFilename = NULL,
                        filenamePrefix = NULL, fileTypeMatrix = NULL,
                        dataFolderPath = NULL) {
   
-  #look for file by name (countinue without bothering user if found)
+  #look for file by name (continue without bothering user if found)
   if(!is.null(filenamePrefix) & 
      !is.null(defaultFilename) &
      !is.null(dataFolderPath)) {
