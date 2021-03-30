@@ -44,7 +44,7 @@
 #     
 #                   
 # Feature wishlist:  (*: planned but not complete)
-#     * add functionality to the user selection of the threshold number of data pointsto include
+#     * add functionality to the user selection of the threshold number of data points to include
 ## ===================================================== ##
 
 

@@ -249,22 +249,49 @@ unique_assignment_counts <- unique_assignment_counts[order(unique_assignment_cou
 
 
 
+##Assign short name to profiles according to profile size
+profile_names <- count(all_assignments, sort = T, ... = profile) %>% 
+  rename(long_name="...", count=n) %>% 
+  add_column(short_name = NA)
+
+for (i in 1:nrow(profile_names)) {
+  profile_names$short_name[i] <- paste0("P", i)
+}
+
+##Add short profile name to student profile assignment
+all_assignments <- add_column(all_assignments, profile_name = NA)
+
+for (i in 1:nrow(all_assignments)) {
+  all_assignments$profile_name[i] <- profile_names$short_name[ profile_names$long_name == all_assignments$profile[i] ]
+}
+
+
+##Add short profile name to profile counts
+unique_assignment_counts <- add_column(unique_assignment_counts, profile_name = NA)
+
+for (i in 1:nrow(unique_assignment_counts)) {
+  unique_assignment_counts$profile_name[i] <- profile_names$short_name[ profile_names$long_name == unique_assignment_counts$Cluster.Assignment[i] ]
+}
+
+
 ######### Save data to file #########
 message("\nSaving files.\n")
 
 #write to CSV file
 ##Save dataFrame of profiles and percentage students in each profile
-write.csv(file = file.path("output", paste0("300_profileDistribution-", n_vectors ,"_criteria.csv")),
-          x = unique_assignment_counts, row.names = F)
+write_csv(path = file.path("output", paste0("300_profileDistribution-", n_vectors ,"_criteria.csv")),
+          x = unique_assignment_counts, col_names = T)
+write_csv(path = file.path("output", paste0("300_profileCount_names-", n_vectors ,"_criteria.csv")),
+          x = profile_names, col_names = T)
 
 ##Save dataFrame of cluster assignments of individual users
-write.csv(file = file.path("output", paste0("300_clusterAssignmentsAllUsers-", n_vectors ,"_criteria.csv")),
+write.csv(file = file.path("output", paste0("300_clusterAssignmentsAllUsersExpanded-", n_vectors ,"_criteria.csv")),
           x = cluster_assignments, row.names = T)
-write.csv(file = file.path("output", paste0("300_clusterAssignmentsAllUsersCollapsed-", n_vectors ,"_criteria.csv")),
-          x = cluster_assignments_collapsed, row.names = F)
+write_csv(path = file.path("output", paste0("300_clusterAssignmentsAllUsersCollapsed-", n_vectors ,"_criteria.csv")),
+          x = all_assignments, col_names = T)
 
 #write to RData file
-save(unique_assignment_counts, cluster_assignments, all_assignments,
+save(unique_assignment_counts, cluster_assignments, all_assignments, profile_names,
      file = file.path("output", paste0("300_profiles-", n_vectors ,"_criteria.RData")),
      precheck = TRUE, compress = TRUE)
 
