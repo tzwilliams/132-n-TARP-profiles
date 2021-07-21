@@ -28,7 +28,7 @@
 #
 # Changelog:
 #   2020.02.19.   init code
-#     * extracted code for building feature vectors to 110_buildFeatureVectors.R
+#     * extracted code for building feature vectors from 100_cleanAssessmentData.R
 #
 #
 # Feature wishlist:  (*: planned but not complete)
@@ -62,7 +62,7 @@ USER_IDS <- stu_sections$`User ID`[stu_sections$training_set==T]
 require(tidyverse)
 require(readxl)
 
-#Load funtions
+#Load functions
 source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
 
 
@@ -73,7 +73,7 @@ source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
 
 ########## user options and customization #########
 ##########
-## dev mode option to skip user option selection durint initial development and testing
+## dev mode option to skip user option selection during initial development and testing
 
 if(DEV_MODE_DEFAULTS_TOGGLE){
   # no CO filtering
@@ -386,7 +386,7 @@ z <- data.table::as.data.table(stu_LO_FV[, c(TRUE, pct_FVs)])
 
 # Find the student IDs for those students who are missing all assessments for one or more LO groupings
 stu_to_drop <- z[ z[, do.call(pmin, .SD) == 0, .SDcols=names(stu_LO_FV[, c(TRUE, pct_FVs)])] ][, 1]
-stu_to_drop <- as.tibble(stu_to_drop)
+stu_to_drop <- as_tibble(stu_to_drop)
 
 # save the rows associated with the students to drop
 stu_LO_FV.dropped_IDs <- stu_LO_FV[stu_LO_FV$`User ID` %in%  stu_to_drop$`User ID`, ]

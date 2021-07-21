@@ -9,7 +9,7 @@
 # 
 # Description:  Identify and save the n-tarp profiles
 # 
-# Package dependancies: 
+# Package dependencies: 
 #
 # Changelog:
 #     

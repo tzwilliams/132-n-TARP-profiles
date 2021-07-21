@@ -8,9 +8,9 @@
 #
 # Affiliation:  Purdue University
 # 
-# Description:  Scripts in the 400s focus on cleaning the data that was not used in profile construction. Once cleaned, this data will be used in the profile interpretation.c
+# Description:  Scripts in the 400s focus on cleaning the data that was not used in profile construction. Once cleaned, this data will be used in the profile interpretation.
 # 
-# Package dependancies: 
+# Package dependencies: 
 # 
 # Input stack: 
 #

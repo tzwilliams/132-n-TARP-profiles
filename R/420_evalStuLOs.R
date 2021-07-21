@@ -37,7 +37,7 @@ rm(list=ls())
 #load required packages
 require(tidyverse)
 
-#Load funtions 
+#Load functions 
 source(file.path(getwd(), "R", "functions", "DisplayPercentComplete.R"))
 source(file.path(getwd(), "R", "functions", "file-structure-functions.R"))
 

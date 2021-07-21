@@ -24,7 +24,7 @@
 # 
 # Description:  Functions to check for existence of directories and files
 # 
-# Package dependancies: [beepr]
+# Package dependencies: [beepr]
 #
 # Changelog:
 #     2017.05.11.   Initial function extraction from pipeline
@@ -34,7 +34,7 @@
 ## ===================================================== ##
 
 
-#Function: Check for existance of subdirectory, create if it doesn't exist.
+#Function: Check for existence of subdirectory, create if it doesn't exist.
 DirCheckCreate <- function(subDir) {
   #set directory variables
   mainDir <- getwd()
@@ -91,7 +91,7 @@ ExpectedFileCheck <- function(selectedFilename, expectedFileEnding) {
 
 
 
-#Function: Check for existance of file in working directory
+#Function: Check for existence of file in working directory
 FileExistCheck_workingDir <- function(filename, subDir = "", fullPathPassed = FALSE) {
   
   #set parameters for file location
@@ -104,19 +104,19 @@ FileExistCheck_workingDir <- function(filename, subDir = "", fullPathPassed = FA
       filePath <- file.path(mainDir, subDir, filename, fsep = "/")
   }
   
-  #check for existance of file
+  #check for existence of file
   if(file.exists(filePath)){
     cat(paste(filename, "found -- continuing\n"))
     return(filePath)
   }else{
     cat(paste("ERROR: ", filename, "not found in ", dirname(filePath), " -- exiting script\n"))
     rm(list=ls()) ## Clear the environment
-    return(FALSE)  #retun signal to exit script if file not found
+    return(FALSE)  #return signal to exit script if file not found
   }
 }
 
 
-# #Function: Check for existance of file in a directory
+# #Function: Check for existence of file in a directory
 # FileExistCheck <- function(dir, filename) {
 #   #store the file path
 #   filePath <- file.path(dir, filename)
@@ -128,7 +128,7 @@ FileExistCheck_workingDir <- function(filename, subDir = "", fullPathPassed = FA
 #   }else{
 #     cat(paste("ERROR: ", filename, "not found in ", dir, " -- exiting script"))
 #     rm(list=ls()) ## Clear the environment
-#     return(FALSE)  #retun signal to exit script if file not found
+#     return(FALSE)  #return signal to exit script if file not found
 #   }
 # }
 
@@ -172,7 +172,7 @@ SelectFile <- function(prompt = NULL, defaultFilename = NULL,
     filenamePath <- file.path(dataFolderPath, filename)
   
   
-    #filename matched expected string, return the file'path's path
+    #filename matched expected string, return the file's path
     #  otherwise continue with user selection of file
     # if(!is.null(filenamePath)) {
     #   if(filenamePath > 0){
@@ -188,11 +188,11 @@ SelectFile <- function(prompt = NULL, defaultFilename = NULL,
     cat("\n", prompt)
     #beepr::beep(sound = 10)   #notify user to provide input
     # filename <- file.choose() #commented out, but may still be needed if working in RStudio server environment
-    filename <- tcltk::tk_choose.files(caption = prompt, 
-                                       default = paste0(filenamePrefix, 
-                                                        defaultFilename),
-                                       filter = fileTypeMatrix,
-                                       multi = FALSE)
+    filename <- tcltk::tk_choose.files(caption = prompt
+                                       ,default = paste0(filenamePrefix, 
+                                                        defaultFilename)
+                                       ,filter = fileTypeMatrix
+                                       ,multi = FALSE)
     filenameCheckResult <- ExpectedFileCheck(selectedFilename = filename, 
                                              expectedFileEnding = defaultFilename)
     
