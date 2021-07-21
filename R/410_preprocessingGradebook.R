@@ -59,7 +59,7 @@ if(!exists("filenameGB")) filenameGB <- NULL
 #Locate the CLEAN gradebook file
 filenameGB <- 
   SelectFile(prompt = "*****Select the CLEANED GRADEBOOK file (Excel)*****\n    (The file picker window may have opened in the background.  Check behind this window if you do not see it.)\n",
-             defaultFilename = "ENGR132_Sp18_SemesterGrades_v5_deID",
+             defaultFilename = "ENGR132_Sp18_SemesterGrades_v5_deID-3_min_title_meta.xlsx",
              fileTypeMatrix = matrix(c("xlsx", "xlsx", "All files", ".*"),
                                      2, 2, byrow = TRUE),
              dataFolderPath = ifelse(exists("dataFolderPath") & !is.null(dataFolderPath),
@@ -153,3 +153,6 @@ save(grades,
      file = file.path("output", "410_gradebook-MT_final_abs_etc.RData"),
      precheck = TRUE, compress = TRUE)
 
+#save input stack details to csv file
+write_csv(x = as.data.frame(filenameGB),
+     file = file.path("output", "410_gradebook-MT_final_abs_etc-input_stack.csv"))

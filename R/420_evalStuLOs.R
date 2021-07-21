@@ -260,3 +260,7 @@ save(stu_profiles_and_rubricPoints, data_raw100_assessment_training,
      precheck = TRUE, compress = TRUE)
 
 
+
+# #save input stack details to csv file
+# write_csv(x = as.data.frame(filenameGB),
+#           file = file.path("output", "420_evalStuLOs-input_stack.csv"))
