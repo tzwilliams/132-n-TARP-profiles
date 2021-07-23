@@ -254,7 +254,7 @@ for(i in 1:length(unique_assignments))
 unique_assignment_counts$Cluster.Assignment <- unique_assignments
 unique_assignment_counts$Number.Students <- temp
 ##Calculate percentage of learners for each profile
-unique_assignment_counts$Percentage.Students <- (temp / n_learners) * 100
+unique_assignment_counts$Percentage.Students <- (temp / n_learners)
 ##Convert list to dataFrame and sort profiles in decreasing order of Percentage.Students
 unique_assignment_counts <- as.data.frame(unique_assignment_counts)
 unique_assignment_counts <- 
