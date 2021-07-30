@@ -17,10 +17,10 @@
 # Package dependencies: 
 #
 # Changelog:
-#     
+#     2021.07.2x.   commented out the file loading code--a bug with grepl is suspected.  Workaround: manually load the 3 RData files
 #                   
-# Feature wishlist:  (*: planned but not complete)
-#     *
+# Feature wishlist:  (*: planned; /: started; x: complete)
+#     [*] re-enable file loading
 ## ===================================================== ##
 
 
