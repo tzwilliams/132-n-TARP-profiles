@@ -4,7 +4,6 @@
 #               https://github.com/tzwilliams/
 #               
 # Authors:      Taylor Williams 
-#
 # Affiliation:  Purdue University
 # 
 # Description:  Identify and save the n-tarp profiles
@@ -17,7 +16,7 @@
 # Package dependencies: 
 #
 # Changelog:
-#     2021.07.2x.   commented out the file loading code--a bug with grepl is suspected.  Workaround: manually load the 3 RData files
+#     2021.07.2x. commented out the file loading code--a bug with grepl is suspected.  Workaround: manually load the 3 RData files
 #                   
 # Feature wishlist:  (*: planned; /: started; x: complete)
 #     [*] re-enable file loading
@@ -29,8 +28,8 @@
 ######### Clean the environment ########## 
 # rm(list=ls())
 # ## Clean the environment except required variables
-# rm(list = setdiff(ls(), c("course", "path_files", "path_output", "probMatrix",
-#                   
+# varsToRetain <- c("course", "path_files", "path_output", "probMatrix")
+# rm(list=setdiff(ls(), varsToRetain))
 
 ######### Internal functions ########## 
 
@@ -47,6 +46,15 @@ source(file.path(getwd(), "R", "functions", "file-structure-functions.R"))
 
 
 ######### Read Data ##########
+
+## WORKAROUND
+probMatrix <- stu_LO_FV #run this and insert the appropriate clean feature vector (aka, probability matrix)
+
+projection_values <- projection
+projection_values <- rownames_to_column(projection_values)
+names(projection_values)[1] <- "User ID"
+
+
 # if(!exists("filenamePrefix")) filenamePrefix <- NULL
 # if(!exists("dataFolderPath")) dataFolderPath <- NULL
 # if(!exists("filenameFV")) filenameFV <- NULL
@@ -68,7 +76,7 @@ source(file.path(getwd(), "R", "functions", "file-structure-functions.R"))
 # #load in the data based on the type of data file provided
 # if(grepl(x = filenameFV, pattern = "\\.RData$")){
 #   objs <- load(file = filenameFV, verbose = T)
-  probMatrix <- stu_LO_FV
+#  probMatrix <- stu_LO_FV
 #   # probMatrix <- rownames_to_column(probMatrix)
 #   # names(probMatrix)[1] <- "User ID"
 # }else if(grepl(x = filenameFV, pattern = "\\.(csv|CSV)$")){
@@ -122,9 +130,9 @@ source(file.path(getwd(), "R", "functions", "file-structure-functions.R"))
 # #load in the data based on the type of data file provided
 # if(grepl(x = filenameProj, pattern = "\\.RData$")){
 #   load(file = filenameProj)
-  projection_values <- projection
-  projection_values <- rownames_to_column(projection_values)
-  names(projection_values)[1] <- "User ID"
+  # projection_values <- projection
+  # projection_values <- rownames_to_column(projection_values)
+  # names(projection_values)[1] <- "User ID"
 # rm(projection)
 # # }else if(grepl(x = filenameProj, pattern = "\\.(csv|CSV)$")){
 # #   projection_values <- read_csv(file = filenameProj)
