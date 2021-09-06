@@ -48,15 +48,19 @@ rm(list=ls())
 
 
 ######### Read Data ##########
-load(file.path("output", paste0("100_assessmentData.RData")))
+#load(file.path("output", paste0("100_assessmentData.RData")))
+load(file.path("output", paste0("assessment_data_IDs_ver.RData")))
+load(file.path("output", paste0("IDs_ver.RData")))
 
 
 
 ######### Setup ##########
 #set run constants
 DEV_MODE_DEFAULTS_TOGGLE <- F  #set true to use defaults (skip user options)
-USER_IDS <- stu_sections$`User ID`[stu_sections$training_set==T]
+#USER_IDS <- stu_sections$`User ID`[stu_sections$training_set==F]
+USER_IDS <- IDs_ver$`User ID`
 
+assessment_data <- data_raw100_assessment_ver2
 
 #load required packages
 require(tidyverse)
@@ -77,11 +81,11 @@ source(paste0(getwd(), "/R/functions/DisplayPercentComplete.R"))
 
 if(DEV_MODE_DEFAULTS_TOGGLE){
   # no CO filtering
-  df_subset <- data_raw100_assessment_training
+  df_subset <- assessment_data
   
   # CO01 filtering
-  # LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO01"
-  # df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+  # LO_ID_range <- assessment_data$CO_ID == "CO01"
+  # df_subset <- assessment_data[LO_ID_range, ]
 
   LO_subset <- sort(unique(df_subset$LO_ID))
   
@@ -122,32 +126,32 @@ if(DEV_MODE_DEFAULTS_TOGGLE){
     #exit loop and continue script if input valid
     if(userSelection_filter == 0){
       # no filter
-      df_subset <- data_raw100_assessment_training
+      df_subset <- assessment_data
       break
     } else if(userSelection_filter == 1){
       # filter on the CO01 LOs
-      LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO01"
-      df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+      LO_ID_range <- assessment_data$CO_ID == "CO01"
+      df_subset <- assessment_data[LO_ID_range, ]
       break
     } else if(userSelection_filter == 2){
       # filter on the CO02 LOs
-      LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO02"
-      df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+      LO_ID_range <- assessment_data$CO_ID == "CO02"
+      df_subset <- assessment_data[LO_ID_range, ]
       break
     } else if(userSelection_filter == 3){
       # filter on the CO03 LOs
-      LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO03"
-      df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+      LO_ID_range <- assessment_data$CO_ID == "CO03"
+      df_subset <- assessment_data[LO_ID_range, ]
       break
     } else if(userSelection_filter == 4){
       # filter on the CO04 LOs
-      LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO04"
-      df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+      LO_ID_range <- assessment_data$CO_ID == "CO04"
+      df_subset <- assessment_data[LO_ID_range, ]
       break
     } else if(userSelection_filter == 5){
       # filter on the CO05 LOs
-      LO_ID_range <- data_raw100_assessment_training$CO_ID == "CO05"
-      df_subset <- data_raw100_assessment_training[LO_ID_range, ]
+      LO_ID_range <- assessment_data$CO_ID == "CO05"
+      df_subset <- assessment_data[LO_ID_range, ]
       break
     }
   
@@ -409,3 +413,4 @@ write_csv(path = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"
 save(stu_LO_FV, LO_lvl, stu_LO_FV.dropped_IDs,
      file = file.path("output", paste0("110v2_stuFeatureVector-", LO_lvl ,"_grouping-", inc_COs, ".RData")),
      precheck = TRUE, compress = TRUE)
+

@@ -24,7 +24,7 @@
 #
 # Description:  Randomly split the user ID list into two sets. One for training and one for verification
 # 
-# Package dependancies: 
+# Package dependencies: 
 #
 # Changelog:
 #   2020.02.??.   Initial code
