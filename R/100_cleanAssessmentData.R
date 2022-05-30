@@ -24,7 +24,7 @@
 #
 # Description:  
 # 
-# Package dependancies: 
+# Package dependencies: 
 #
 # Changelog:
 #   2018.10.23.   Init code
